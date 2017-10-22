@@ -1,9 +1,9 @@
 # Multi-Task Learning experiment for Vico Research
 
 usage:
-```bash
+```
 > python -m vico.validate -h
-sage: -m [-h] [--bilstm-dim BILSTM_DIM]
+usage: -m [-h] [--bilstm-dim BILSTM_DIM]
           [--log-level {DEBUG,INFO,WARNING,ERROR,CRITICAL}]
           [--data-dir DATA_DIR] [--folds FOLDS]
           [--embedding-dim EMBEDDING_DIM] [--output-file OUTPUT_FILE]
