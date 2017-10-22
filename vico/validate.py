@@ -19,7 +19,7 @@ def _split(docs: ndarray) -> Iterator[ndarray]:
 
 
 def k_cross():
-    docs = read.all_docs() | as_tuple
+    docs = read.all_docs() | take(5) | as_tuple
     pdocs = _preprocess(docs)
     folds = args.get().folds
     for fold, (train_indices, test_indices) in enumerate(_split(pdocs)):

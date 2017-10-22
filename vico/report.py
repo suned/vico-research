@@ -2,12 +2,15 @@ import os
 import pandas
 from keras.models import Model
 
-from vico import vocabulary, args
+from vico import vocabulary, args, label
 from vico.types import Docs
 
 
 def save(model: Model, train_docs: Docs, test_docs: Docs):
-    batch_generator = vocabulary.batch_generator(train_docs)
+    batch_generator = vocabulary.batch_generator(
+        train_docs,
+        labeller=label.price
+    )
     train_sequences, train_labels = batch_generator(train_docs)
     test_sequences, test_labels = batch_generator(test_docs)
     train_loss = model.test_on_batch(train_sequences, train_labels)

@@ -38,7 +38,7 @@ def _remove_tags(doc: HTMLDocument) -> HTMLDocument:
 def remove_useless_tags(docs: DocsIterator) -> DocsIterator:
     log.info('Removing tags: %s', ', '.join(_useless_tags()))
     pool = Pool(os.cpu_count())
-    yield from pool.map(_remove_tags, docs)
+    return pool.map(_remove_tags, docs)
 
 
 def _html_tokenize(doc: HTMLDocument, use_attributes=False) -> HTMLDocument:
@@ -81,7 +81,7 @@ def html_tokenize(docs: DocsIterator, use_attributes=False) -> DocsIterator:
     log.info('HTML tokenizing documents')
     pool = Pool(os.cpu_count())
     tokenize = partial(_html_tokenize, use_attributes=use_attributes)
-    yield from pool.map(tokenize, docs)
+    return pool.map(tokenize, docs)
 
 
 def lowercase(docs: DocsIterator) -> DocsIterator:
