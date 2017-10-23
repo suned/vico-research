@@ -35,6 +35,7 @@ def _preprocess(docs):
     pdocs = (docs
              | preprocess.remove_useless_tags
              | preprocess.html_tokenize
+             | preprocess.lowercase
              | as_array)
     return pdocs
 

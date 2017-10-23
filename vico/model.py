@@ -14,7 +14,6 @@ from vico import args
 log = logging.getLogger('vico.model')
 
 
-
 def get_input_layer(length: int) -> Input:
     log.info('Building input layer with input length: %i', length)
     return Input(
@@ -41,7 +40,7 @@ def get_embedding_layer(vocab_size: int) -> Layer:
 def get_recurrent_layer() -> Layer:
     dim = args.get().bilstm_dim
     log.info('Building recurrent layer with hidden dimension: %i', dim)
-    return Bidirectional(LSTM(args.get().bilstm_dim), name='bilstm_layer')
+    return Bidirectional(LSTM(dim), name='bilstm_layer')
 
 
 def get_output_layer() -> Layer:

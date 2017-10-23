@@ -57,4 +57,4 @@ def all_docs() -> DocsIterator:
                 get_file_path(sample)
             )
         except FileNotFoundError:
-            pass
+            log.warning('File not found: %s', get_file_path(sample))
