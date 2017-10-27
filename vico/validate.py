@@ -1,47 +1,59 @@
-from typing import Iterator
-
+from pymonad import List
+from pandas import Series
 from sklearn.model_selection import KFold
+from itertools import islice
 
-from vico import train, read, args, report
-from numpy import ndarray
+from vico import train, read, report, args
 
-from vico.pipes import preprocess, as_array
-from pipe import take, as_tuple
+from vico.config import Config
+from vico import preprocess
 
 import logging
+
+from vico.types import Folds, DocIterator, Docs
+from . import configure_root_logger
 
 log = logging.getLogger('vico.validate')
 
 
-def _split(docs: ndarray) -> Iterator[ndarray]:
-    splitter = KFold(n_splits=args.get().folds)
-    return splitter.split(docs)
+def _split(docs: Docs, config: Config) -> Folds:
+    doc_series = Series(docs)
+    splitter = KFold(n_splits=config.folds)
+    folds = splitter.split(doc_series)
+    for train_indices, test_indices in folds:
+        train_docs = doc_series[train_indices]
+        test_docs = doc_series[test_indices]
+        yield Docs(*train_docs), Docs(*test_docs)
 
 
-def k_cross():
-    docs = read.all_docs() | take(5) | as_tuple
-    pdocs = _preprocess(docs)
-    folds = args.get().folds
-    for fold, (train_indices, test_indices) in enumerate(_split(pdocs)):
+def k_cross(config: Config) -> None:
+    docs = read.all_docs(config)
+    docs = islice(docs, 5)
+    pdocs = _preprocess(config, docs)
+    folds = config.folds
+    for fold, (train_docs, test_docs) in enumerate(_split(pdocs, config)):
         log.info('Starting fold %i of %i', fold + 1, folds)
-        train_docs = pdocs[train_indices]
-        network = train.early_stopping(train_docs)
-        test_docs = pdocs[test_indices]
-        report.save(network, train_docs, test_docs)
+        network = train.early_stopping(train_docs, config)
+        report.save(network, train_docs, test_docs, config)
 
 
-def _preprocess(docs):
-    log.info('Pre-processing %i documents', len(docs))
-    pdocs = (docs
-             | preprocess.remove_useless_tags
-             | preprocess.html_tokenize
-             | preprocess.lowercase
-             | as_array)
-    return pdocs
+def _preprocess(config: Config, docs: DocIterator) -> Docs:
+    ds = List(*docs)
+    log.info('Pre-processing %i documents', len(ds))
+    tokenize = preprocess.html_tokenize(config.use_attributes)
+    pipeline = (preprocess.lowercase *
+                tokenize *
+                preprocess.remove_useless_tags)
+
+    return pipeline(ds)
 
 
 if __name__ == '__main__':
-    k_cross()
+    def run() -> None:
+        config = args.get()
+        configure_root_logger(config)
+        k_cross(config)
+    run()
 
 
 

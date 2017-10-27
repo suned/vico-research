@@ -1,12 +1,17 @@
-from typing import Callable, Iterator, Dict, Tuple, Any
+from typing import Callable, Dict, Tuple, Any, Generator, Iterator
+from pymonad import List
+
 from numpy import ndarray
 
 from vico.html_document import HTMLDocument
 
-DocsIterator = Iterator[HTMLDocument]
-DocsGenerator = Callable[[], DocsIterator]
-Docs = Tuple[HTMLDocument]
-Vocabulary = Dict[str, int]
+
+Docs = List
 Batch = Tuple[ndarray, ndarray]
-BatchGenerator = Callable[[DocsIterator], Batch]
+Batcher = Callable[[Docs], Batch]
+DocIterator = Iterator[HTMLDocument]
+Vocabulary = Dict[str, int]
 Labeller = Callable[[HTMLDocument], Any]
+Fold = Tuple[Docs, Docs]
+Folds = Generator[Fold, None, None]
+

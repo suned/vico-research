@@ -2,19 +2,19 @@ import logging
 from functools import partial
 from multiprocessing.pool import Pool
 import os
-from typing import List
+from pymonad import curry, List
 
 import nltk
 from bs4 import BeautifulSoup, Tag, Doctype, NavigableString
 
-from vico.html_document import HTMLDocument
-from vico.types import DocsIterator
+from vico.html_document import HTMLDocument, Tokens
+from vico.types import Docs
 
 log = logging.getLogger('vico.preprocess')
 
 
-def _useless_tags() -> List[str]:
-    return [
+def _useless_tags() -> List:
+    return List(*[
         'script',
         'style',
         'button',
@@ -22,7 +22,7 @@ def _useless_tags() -> List[str]:
         'meta',
         'noscript',
         'link'
-    ]
+    ])
 
 
 def _remove_tags(doc: HTMLDocument) -> HTMLDocument:
@@ -35,13 +35,15 @@ def _remove_tags(doc: HTMLDocument) -> HTMLDocument:
     return doc.set_html(html)
 
 
-def remove_useless_tags(docs: DocsIterator) -> DocsIterator:
+@curry
+def remove_useless_tags(docs: Docs) -> Docs:
     log.info('Removing tags: %s', ', '.join(_useless_tags()))
     pool = Pool(os.cpu_count())
-    return pool.map(_remove_tags, docs)
+    pdocs = pool.map(_remove_tags, docs)
+    return Docs(*pdocs)
 
 
-def _html_tokenize(doc: HTMLDocument, use_attributes=False) -> HTMLDocument:
+def _html_tokenize(use_attributes, doc: HTMLDocument) -> HTMLDocument:
     def format_attributes(tag):
         attributes = []
         for key, value in tag.attrs.items():
@@ -74,22 +76,35 @@ def _html_tokenize(doc: HTMLDocument, use_attributes=False) -> HTMLDocument:
 
     soup = BeautifulSoup(doc.html, 'lxml')
     tokens = tokenize_element(soup)
-    return doc.set_tokens(tokens)
+    return doc.set_tokens(Tokens(*tokens))
 
 
-def html_tokenize(docs: DocsIterator, use_attributes=False) -> DocsIterator:
+@curry
+def html_tokenize(use_attributes, docs: Docs) -> Docs:
     log.info('HTML tokenizing documents')
     pool = Pool(os.cpu_count())
-    tokenize = partial(_html_tokenize, use_attributes=use_attributes)
-    return pool.map(tokenize, docs)
+    tokenize = partial(_html_tokenize, use_attributes)
+    pdocs = pool.map(tokenize, docs)
+    return Docs(*pdocs)
 
 
-def lowercase(docs: DocsIterator) -> DocsIterator:
+@curry
+def simple_tokenize(docs: Docs) -> Docs:
+    def tokenize(doc: HTMLDocument) -> HTMLDocument:
+        tokens = doc.html.split(' ')
+        return doc.set_tokens(Tokens(*tokens))
+    return tokenize * docs
+
+
+@curry
+def lowercase(docs: Docs) -> Docs:
+    def to_lower(doc: HTMLDocument) -> HTMLDocument:
+        lower_tokens = (lambda t: t.lower()) * doc.tokens
+        return doc.set_tokens(lower_tokens)
+
     log.info('Lowercase documents')
-    for doc in docs:
-        lowercase_tokens = tuple(t.lower() for t in doc.tokens)
-        yield doc.set_tokens(lowercase_tokens)
+    return to_lower * docs
 
 
-def maxlen(docs: DocsIterator):
+def maxlen(docs: Docs) -> int:
     return max(len(doc.html) for doc in docs)

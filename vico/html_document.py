@@ -1,6 +1,9 @@
 import copy
 import os
-from typing import Tuple
+from pymonad import List
+
+Token = str
+Tokens = List
 
 
 class NotTokenizedError(Exception):
@@ -18,7 +21,7 @@ class HTMLDocument:
                  price: float = 0.0,
                  currency: str = '',
                  path: str = '',
-                 tokens: Tuple = None):
+                 tokens: Tokens = None) -> None:
         self._html = html
         self._brand = brand
         self._gtin13 = gtin13
@@ -68,7 +71,7 @@ class HTMLDocument:
         return self._currency
 
     @property
-    def tokens(self) -> tuple:
+    def tokens(self) -> Tokens:
         if not self._tokens:
             raise NotTokenizedError(
                 'Document {} is not tokenized'.format(self._path)

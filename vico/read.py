@@ -1,29 +1,30 @@
 import os
-import pandas
+
+from pandas import DataFrame, Series, read_csv, to_numeric
 import logging
 
-from vico import args
+from vico.config import Config
 from vico.html_document import HTMLDocument
-from vico.types import DocsIterator
+from vico.types import DocIterator
 
 log = logging.getLogger('vico.read')
 
 
-def all_docs() -> DocsIterator:
-    path = args.get().data_dir
+def all_docs(config: Config) -> DocIterator:
+    path = config.data_dir
 
-    def get_file_path(s: pandas.Series) -> str:
+    def get_file_path(s: Series) -> str:
         filename = os.path.split(s.local_path)[-1]
         return os.path.join(path, 'pages', filename)
 
-    def read_html(s: pandas.Series) -> str:
+    def read_html(s: Series) -> str:
         file_path = get_file_path(s)
         with open(file_path) as f:
             return f.read()
 
-    def read_samples() -> pandas.DataFrame:
+    def read_samples() -> DataFrame:
         labels_path = os.path.join(path, 'CosmeticsTestData.csv')
-        labels = pandas.read_csv(labels_path, sep=';')
+        labels = read_csv(labels_path, sep=';')
         cleaned_url = (labels.url.str
                        .replace('http://', '')
                        .str.replace('https://', '')
@@ -32,8 +33,9 @@ def all_docs() -> DocsIterator:
                        .str.replace('/', '_')
                        .str.replace('.', '_')
                        .str.lower())
-        labels.index = labels.group.astype(str) + '-' + cleaned_url + '.html'
-        labels.price = pandas.to_numeric(
+        index = labels.group.astype(str) + '-' + cleaned_url + '.html'
+        labels.index = index
+        labels.price = to_numeric(
             labels.price.str.replace(',', '.'),
             errors='coerce'
         )
