@@ -3,10 +3,9 @@ import pandas
 from keras.models import Model
 from pymonad import List
 import logging
+from vico import vocabulary, label, Config
 
 log = logging.getLogger("vico.report")
-
-from vico import vocabulary, label, Config
 
 
 def save(model: Model,
