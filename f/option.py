@@ -45,9 +45,12 @@ class Maybe(Monad, Generic[V], Functor[V], ABC):
     def map(self, f: Callable[[V], N]) -> 'Maybe[N]':
         raise NotImplementedError()
 
+    def __eq__(self, other) -> bool:
+        return self.__dict__ == other.__dict__
+
 
 class Just(Maybe[V], Generic[V]):
-    def apply(self: Maybe[V], o: Maybe[N]) -> Maybe[N]:
+    def apply(self, o: Maybe[N]) -> Maybe[N]:
         if not callable(self.value):
             raise ValueError('Applicative Maybe needs a callable')
         f = self.value

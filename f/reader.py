@@ -2,7 +2,7 @@ from typing import TypeVar, Callable, Any, Generic, Tuple, Type
 from f.applicative import Applicative
 from f.functor import Functor
 from f.monad import Monad
-from .util import identity
+from .util import identity, Unary
 
 V = TypeVar('V')
 C = TypeVar('C')
@@ -11,7 +11,7 @@ N = TypeVar('N')
 
 class Reader(Monad,
              Generic[C, V]):
-    def __init__(self, f: Callable[[C], V]) -> None:
+    def __init__(self, f: Unary[C, V]) -> None:
         self._f = f
 
     @staticmethod
@@ -29,10 +29,17 @@ class Reader(Monad,
 
     def bind(self, f: 'Callable[[V], Reader[C, N]]') -> 'Reader[C, N]':
         return Reader(lambda w: f(self(w))(w))
+    
+    # todo: find a way to move this to Functor without breaking client
+    # type inference
+    def __or__(self, _):
+        pass
 
     def map(self, _):
         pass
 
+    # todo: find a way to move this to Functor without breaking client
+    # type inference
     def skip(self, n: 'Reader[C, N]') -> 'Reader[C, N]':
         return self.bind(lambda _: n)
 
@@ -42,7 +49,8 @@ class Reader(Monad,
     def apply(self, f: 'Functor') -> 'Applicative':
         raise NotImplementedError()
 
-    # todo: find a way to type this properly in the Monad super class
+    # todo: find a way to move this to Monad without breaking client type 
+    # inference
     def __rshift__(self, f: 'Callable[[V], Reader[C, N]]') -> 'Reader[C, N]':
         return self.bind(f)
 

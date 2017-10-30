@@ -1,7 +1,8 @@
-from typing import TypeVar, Callable, Iterator, Tuple, cast
+from typing import TypeVar, Callable, Iterator, Tuple, cast, Generator, Set
 
 from f.monoid import Monoid
 from .functor import Functor, Generic
+from .util import Unary
 
 A = TypeVar('A')
 B = TypeVar('B')
@@ -10,10 +11,14 @@ B = TypeVar('B')
 class List(Monoid[A], Functor[A], Generic[A]):
     @staticmethod
     def empty() -> 'List[A]':
-        return List()
+        t = set()  # type: Set[A]
+        return List(v for v in t)
+
+    def __or__(self, f: Unary[A, B]) -> 'List[B]':
+        return self.map(f)
 
     def append(self, m: 'List[A]') -> 'List[A]':
-        return List(*(self.values + m.values))
+        return List(v for v in self.values + m.values)
 
     def __contains__(self, x: A) -> bool:
         return x in self.values
@@ -24,11 +29,11 @@ class List(Monoid[A], Functor[A], Generic[A]):
     def __iter__(self) -> Iterator[A]:
         return iter(self.values)
 
-    def map(self, f: Callable[[A], B]) -> 'List[B]':
+    def map(self, f: Unary[A, B]) -> 'List[B]':
         mapped = map(f, self.values)
-        return List(*mapped)
+        return List(mapped)
 
-    def __init__(self, *values: A) -> None:
+    def __init__(self, values: Iterator[A]) -> None:
         self._values = tuple(values)
 
     @property

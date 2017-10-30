@@ -6,6 +6,10 @@ B = TypeVar('B')
 
 
 class Functor(Generic[A], ABC):
+    @staticmethod
+    def fmap(fu: 'Functor[A]', f: Callable[[A], B]) -> 'Functor[B]':
+        return fu.map(f)
+
     @abstractmethod
     def map(self, f: Callable[[A], B]) -> 'Functor[B]':
         raise NotImplementedError()
