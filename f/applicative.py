@@ -1,4 +1,3 @@
-from typing import TypeVar, Callable, Generic, Type
 from abc import ABC, abstractclassmethod, abstractmethod
 from f.functor import Functor
 

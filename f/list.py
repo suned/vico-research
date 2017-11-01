@@ -1,8 +1,8 @@
 from typing import TypeVar, Callable, Iterator, Tuple, cast, Generator, Set
-
+from functools import reduce
 from f.monoid import Monoid
 from .functor import Functor, Generic
-from .util import Unary
+from .util import Unary, Predicate
 
 A = TypeVar('A')
 B = TypeVar('B')
@@ -28,6 +28,24 @@ class List(Monoid[A], Functor[A], Generic[A]):
 
     def __iter__(self) -> Iterator[A]:
         return iter(self.values)
+
+    @property
+    def reverse(self) -> 'List[A]':
+        return List(reversed(self.values))
+
+    def filter(self, p: Predicate[A]) -> 'List[A]':
+        return List(filter(p, self.values))
+
+    def reduce(self, f: Callable[[B, A], B], initial: B) -> B:
+        return reduce(f, self.values, initial)
+
+    @property
+    def head(self) -> A:
+        return self.values[0]
+
+    @property
+    def tail(self) -> 'List[A]':
+        return List(i for i in self.values[1:])
 
     def map(self, f: Unary[A, B]) -> 'List[B]':
         mapped = map(f, self.values)

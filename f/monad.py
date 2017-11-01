@@ -1,7 +1,5 @@
-from typing import TypeVar, Generic, Callable, Any, Type
-from abc import ABC, abstractclassmethod, abstractmethod
 
-from f.functor import Functor
+from abc import ABC, abstractclassmethod, abstractmethod
 from f.applicative import Applicative
 
 
@@ -11,6 +9,7 @@ class Monad(Applicative, ABC):
         raise NotImplementedError()
 
     # todo: improve typing here
+    @classmethod
     @abstractclassmethod
     def pure(cls, value):
         raise NotImplementedError()
@@ -22,12 +21,11 @@ class Monad(Applicative, ABC):
     @abstractmethod
     def skip(self, n):
         return self.bind(lambda _: n)
-   
+
     @abstractmethod
     def __and__(self, n):
         return self.skip(n)
 
     @abstractmethod
     def __rshift__(self, f):
-        return NotImplementedError()
-      
+        raise NotImplementedError()

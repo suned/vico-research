@@ -1,8 +1,8 @@
-from typing import TypeVar, Generic, Callable, Any, cast, Type
+from typing import TypeVar, Generic
 from abc import ABC, abstractmethod
-from f.applicative import Applicative
 from f.functor import Functor
 from f.monad import Monad
+from .util import Unary
 
 V = TypeVar('V')
 N = TypeVar('N')
@@ -22,27 +22,27 @@ class Maybe(Monad, Generic[V], Functor[V], ABC):
         return self._value
 
     @abstractmethod
-    def bind(self, f: 'Callable[[V], Maybe[N]]') -> 'Maybe[N]':
+    def bind(self, f: 'Unary[V, Maybe[N]]') -> 'Maybe[N]':
         raise NotImplementedError()
 
-    def __rshift__(self, f: 'Callable[[V], Maybe[N]]') -> 'Maybe[N]':
+    def __rshift__(self, f: 'Unary[V, Maybe[N]]') -> 'Maybe[N]':
         return self.bind(f)
 
     @abstractmethod
-    def apply(self, _) -> 'Maybe[N]':
+    def apply(self: 'Maybe[Unary[N, V]]', n: 'Maybe[N]') -> 'Maybe[V]':
         raise NotImplementedError()
 
     def skip(self, n: 'Maybe[N]') -> 'Maybe[N]':
         return n
 
-    def __or__(self, f: Callable[[V], N]) -> 'Maybe[N]':
+    def __or__(self, f: Unary[V, N]) -> 'Maybe[N]':
         return self.map(f)
 
     def __and__(self, n: 'Maybe[N]') -> 'Maybe[N]':
         return self.skip(n)
 
     @abstractmethod
-    def map(self, f: Callable[[V], N]) -> 'Maybe[N]':
+    def map(self, f: Unary[V, N]) -> 'Maybe[N]':
         raise NotImplementedError()
 
     def __eq__(self, other) -> bool:
@@ -50,17 +50,14 @@ class Maybe(Monad, Generic[V], Functor[V], ABC):
 
 
 class Just(Maybe[V], Generic[V]):
-    def apply(self, o: Maybe[N]) -> Maybe[N]:
-        if not callable(self.value):
-            raise ValueError('Applicative Maybe needs a callable')
-        f = self.value
+    def apply(self: 'Just[Unary[N, V]]', o: Maybe[N]) -> Maybe[V]:
         return o | self.value
 
-    def bind(self, f: Callable[[V], Maybe[N]]) -> Maybe[N]:
+    def bind(self, f: Unary[V, Maybe[N]]) -> Maybe[N]:
         return f(self.value)
 
-    def map(self, f: Callable[[V], N]) -> Maybe[N]:
-            return Just(f(self.value))
+    def map(self, f: Unary[V, N]) -> Maybe[N]:
+        return Just(f(self.value))
 
     def __repr__(self) -> str:
         return 'Just({})'.format(self.value)
@@ -81,3 +78,7 @@ class Nothing(Maybe):
 
     def __repr__(self):
         return "Nothing"
+
+
+def test() -> Maybe[int]:
+    return Just(1) * Just(1)
