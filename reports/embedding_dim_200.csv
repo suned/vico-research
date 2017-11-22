@@ -1,0 +1,2 @@
+embedding_dim,filters,train_samples,test_samples,train_loss,test_loss
+200,10,1184,296,282.85489778260927,1692.6747659219277

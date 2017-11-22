@@ -1,15 +1,19 @@
 import logging
+from typing import Tuple
 from keras.models import Model
+from keras.initializers import RandomUniform, glorot_uniform
 from keras.layers import (
     Input,
-    Bidirectional,
-    LSTM,
     Layer,
     Embedding,
-    Dense
+    Dense,
+    Conv1D,
+    GlobalMaxPool1D,
+    concatenate
 )
 
 from vico.config import Config
+from vico.vocabulary import Vocabulary
 
 log = logging.getLogger('vico.model')
 
@@ -22,25 +26,35 @@ def get_input_layer(length: int) -> Input:
     )
 
 
-def get_embedding_layer(vocab_size: int, config: Config) -> Layer:
+def get_embedding_layer(vocab: Vocabulary, config: Config) -> Layer:
     embedding_dim = config.embedding_dim
     log.info(
         'Building embedding layer with vocab size: %i and embedding dimension: %i',
-        vocab_size,
+        vocab.size,
         embedding_dim
     )
     return Embedding(
-        input_dim=vocab_size,
+        input_dim=vocab.size,
         output_dim=embedding_dim,
-        mask_zero=True,
-        name='embedding_layer'
+        mask_zero=False,
+        name='embedding_layer',
+        embeddings_initializer=RandomUniform(seed=config.seed),
+        weights=[vocab.embedding(config)]
     )
 
 
-def get_bilstm_layer(config: Config) -> Layer:
-    dim = config.bilstm_dim
-    log.info('Building bi-LSTM layer with hidden dimension: %i', dim)
-    return Bidirectional(LSTM(dim), name='bilstm_layer')
+def get_convolutional_layers(config: Config) -> Tuple[Layer]:
+    log.info('Building CNN layers with %i filters each', config. filters)
+    layers = ()
+    for filter_size in config.filter_sizes:
+        layer = Conv1D(
+            filters=config.filters,
+            kernel_size=filter_size,
+            kernel_initializer=glorot_uniform(config.seed),
+            activation='relu'
+        )
+        layers += (layer,)
+    return layers
 
 
 def get_output_layer() -> Layer:
@@ -48,12 +62,17 @@ def get_output_layer() -> Layer:
     return Dense(1, activation='linear', name='output_layer')
 
 
-def get(input_length: int, vocab_size: int, config: Config) -> Model:
+def get(input_length: int, vocabulary: Vocabulary, config: Config) -> Model:
     log.info('Building model')
     input_layer = get_input_layer(input_length)
-    embedding_layer = get_embedding_layer(vocab_size, config)(input_layer)
-    recurrent_layer = get_bilstm_layer(config)(embedding_layer)
-    output = get_output_layer()(recurrent_layer)
+    embedding_layer = get_embedding_layer(vocabulary, config)(input_layer)
+    c_layers = []
+    for layer in get_convolutional_layers(config):
+        layer = layer(embedding_layer)
+        layer = GlobalMaxPool1D()(layer)
+        c_layers.append(layer)
+    c_layers = concatenate(c_layers, name='pooling_concatenation')
+    output = get_output_layer()(c_layers)
     model = Model(
         inputs=input_layer,
         outputs=output,

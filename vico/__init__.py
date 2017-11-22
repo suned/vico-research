@@ -25,6 +25,6 @@ T = TypeVar('T')
 
 
 def immutable_array(a: Iterable[T]) -> ndarray:
-    a_ = array(a)  # type: ndarray[T]
+    a_ = array(list(a))  # type: ndarray
     a_.flags.writeable = False
     return a_

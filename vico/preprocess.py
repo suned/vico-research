@@ -1,28 +1,31 @@
+from typing import Tuple, Any
 import logging
 from functools import partial
 from multiprocessing.pool import Pool
 import os
-from pymonad import curry, List
-
+from f import List, Reader, compose
 import nltk
-from bs4 import BeautifulSoup, Tag, Doctype, NavigableString
+from bs4 import BeautifulSoup, Tag, Doctype, NavigableString, Comment
 
-from vico.html_document import HTMLDocument, Tokens
-from vico.types import Docs
+from vico.html_document import HTMLDocument, Tokenization
+from vico.types import Docs, DocIterator, Tokenizations
+from vico.config import Config
 
 log = logging.getLogger('vico.preprocess')
 
 
-def _useless_tags() -> List:
-    return List(*[
-        'script',
-        'style',
-        'button',
-        'input',
-        'meta',
-        'noscript',
-        'link'
-    ])
+def _useless_tags() -> List[str]:
+    return List(
+        tag for tag in (
+            'script',
+            'style',
+            'button',
+            'input',
+            'meta',
+            'noscript',
+            'link'
+        )
+    )
 
 
 def _remove_tags(doc: HTMLDocument) -> HTMLDocument:
@@ -35,39 +38,39 @@ def _remove_tags(doc: HTMLDocument) -> HTMLDocument:
     return doc.set_html(html)
 
 
-@curry
-def remove_useless_tags(docs: Docs) -> Docs:
+def remove_useless_tags(docs: Docs) -> Reader[Config, Docs]:
     log.info('Removing tags: %s', ', '.join(_useless_tags()))
     pool = Pool(os.cpu_count())
     pdocs = pool.map(_remove_tags, docs)
-    return Docs(*pdocs)
+    return Reader.pure(Docs(pdoc for pdoc in pdocs))
 
 
-def _html_tokenize(use_attributes, doc: HTMLDocument) -> HTMLDocument:
-    def format_attributes(tag):
+def _html_tokenize(use_attributes, doc: HTMLDocument) -> Tokenization:
+    def format_attributes(tag: Tag) -> str:
         attributes = []
         for key, value in tag.attrs.items():
             attributes.append('{}={}'.format(key, value))
         return ' ' + ', '.join(attributes) if attributes else ''
 
-    def format_tag(tag):
+    def format_tag(tag) -> str:
         attributes = format_attributes(tag) if use_attributes else ''
         return '<{}{}>'.format(tag.name, attributes)
 
-    def format_endtag(tag):
+    def format_endtag(tag) -> str:
         return '</{}>'.format(tag.name)
 
-    def tokenize(text):
+    def tokenize(text: str) -> Tuple:
+        if isinstance(text, Comment):
+            return ()
         return tuple(nltk.word_tokenize(text))
 
-    def tokenize_element(element):
+    def tokenize_element(element: Tag) -> Tuple:
         if isinstance(element, Doctype):
             return ()
         if isinstance(element, NavigableString):
             return tokenize(element)
         if isinstance(element, Tag):
-            ts = ()
-            ts += (format_tag(element),)
+            ts = (format_tag(element),)
             for child in element.children:
                 ts += tokenize_element(child)
             ts += (format_endtag(element),)
@@ -76,35 +79,40 @@ def _html_tokenize(use_attributes, doc: HTMLDocument) -> HTMLDocument:
 
     soup = BeautifulSoup(doc.html, 'lxml')
     tokens = tokenize_element(soup)
-    return doc.set_tokens(Tokens(*tokens))
+    return doc.set_tokens(List(t for t in tokens))
 
 
-@curry
-def html_tokenize(use_attributes, docs: Docs) -> Docs:
-    log.info('HTML tokenizing documents')
-    pool = Pool(os.cpu_count())
-    tokenize = partial(_html_tokenize, use_attributes)
-    pdocs = pool.map(tokenize, docs)
-    return Docs(*pdocs)
+def html_tokenize(docs: Docs) -> Reader[Config, Tokenizations]:
+    def _(config: Config) -> Reader[Config, Tokenizations]:
+        log.info('HTML tokenizing documents')
+        pool = Pool(os.cpu_count())
+        tokenize = partial(_html_tokenize, config.use_attributes)
+        pdocs = pool.map(tokenize, docs.values)
+        return Reader.pure(List(pdoc for pdoc in pdocs))
+    return Reader.ask(Config) >> _
 
 
-@curry
-def simple_tokenize(docs: Docs) -> Docs:
-    def tokenize(doc: HTMLDocument) -> HTMLDocument:
+def simple_tokenize(docs: Docs) -> Reader[Config, Tokenizations]:
+    def tokenize(doc: HTMLDocument) -> Tokenization:
         tokens = doc.html.split(' ')
-        return doc.set_tokens(Tokens(*tokens))
-    return tokenize * docs
+        return doc.set_tokens(List(t for t in tokens))
+    return Reader.pure(docs | tokenize)
 
 
-@curry
-def lowercase(docs: Docs) -> Docs:
-    def to_lower(doc: HTMLDocument) -> HTMLDocument:
-        lower_tokens = (lambda t: t.lower()) * doc.tokens
-        return doc.set_tokens(lower_tokens)
+def lowercase(docs: Tokenizations) -> Reader[Config, Tokenizations]:
+    def to_lower(t: Tokenization) -> Tokenization:
+        lower_tokens = t.tokens | (lambda token: token.lower())
+        return Tokenization(t.document, lower_tokens)
 
     log.info('Lowercase documents')
-    return to_lower * docs
+    return Reader.pure(docs | to_lower)
 
 
-def maxlen(docs: Docs) -> int:
-    return max(len(doc.html) for doc in docs)
+def maxlen(tokenizations: Tokenizations) -> int:
+    return max(len(t.tokens) for t in tokenizations)
+
+
+def pipeline(docs: DocIterator) -> Reader[Config, Tokenizations]:
+    ds = List(docs)
+    log.info('Pre-processing %i documents', len(ds))
+    return remove_useless_tags(ds) >> html_tokenize >> lowercase

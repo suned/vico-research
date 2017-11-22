@@ -8,4 +8,8 @@ beautifulsoup4
 lxml
 mypy
 pep8
+pytest
 hypothesis
+git+https://github.com/suned/f.git
+pytest
+gensim

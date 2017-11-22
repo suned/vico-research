@@ -4,21 +4,22 @@ import logging
 from vico.config import Config
 
 
+class LogLevelAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        log_level = getattr(logging, values)
+        setattr(namespace, self.dest, log_level)
+
+
 def get() -> Config:
     default = Config()
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--bilstm-dim',
-        type=int,
-        help='dimension of the lstm hidden layers',
-        default=default.bilstm_dim
-    )
     parser.add_argument(
         '--log-level',
         type=str,
         help='log level',
         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
-        default=logging.getLevelName(default.log_level)
+        default=logging.getLevelName(default.log_level),
+        action=LogLevelAction
     )
     parser.add_argument(
         '--data-dir',
@@ -61,6 +62,12 @@ def get() -> Config:
         type=int,
         help='number of epochs',
         default=default.epochs
+    )
+    parser.add_argument(
+        "--patience",
+        type=int,
+        help='patience parameter for early stopping',
+        default=default.patience
     )
     args = parser.parse_args()
     return Config(**vars(args))
