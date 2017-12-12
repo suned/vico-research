@@ -1,11 +1,17 @@
+import argparse
+from functools import partial
+from multiprocessing.pool import Pool
 from typing import Set, Dict
-from f import List, Immutable, Reader
+from f import List, Immutable, Reader, compose
 from keras.preprocessing.sequence import pad_sequences
 from gensim.models import Word2Vec
 import logging
+import os
+import pickle
 
 from vico import preprocess, immutable_array
-from vico.html_document import Token, Tokenization
+from vico.html_document import Token, Tokenization, HTMLDocument
+from vico.preprocess import html_tokenize_document, to_lower
 from vico.types import Batch, Labeller, Tokenizations
 from vico.config import Config
 from numpy import ndarray, zeros, random
@@ -86,8 +92,67 @@ class Vocabulary(Immutable):
         return len(self.unique_tokens) + 2
 
 
-def get(self, tokenizations: Tokenizations) -> Reader[Config, Vocabulary]:
+def get(tokenizations: Tokenizations) -> Reader[Config, Vocabulary]:
     return Reader.pure(Vocabulary(tokenizations))
 
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('path', type=str)
+    parser.add_argument(
+        '--output-path',
+        type=str,
+        default='embeddings/<lang>-embeddings-<dim>.pkl'
+    )
+    parser.add_argument('--use-attributes', type=bool, default=False)
+    return parser.parse_args()
+
+
+def pipeline(use_attributes, document):
+    tokenization = html_tokenize_document(use_attributes, document)
+    return to_lower(tokenization)
+
+
+def create_embeddings(path, use_attributes, output_path):
+    def read_file(fpath):
+        if fpath.endswith('.html'):
+            with open(file_path) as f:
+                return HTMLDocument(html=f.read())
+
+    log.info('Reading documents')
+    documents = []
+    for root, _, file_names in os.walk(path):
+        for file_name in file_names:
+            file_path = os.path.join(root, file_name)
+            document = read_file(file_path)
+            documents.append(document)
+
+    log.info('Tokenizing documents')
+    f = partial(pipeline, use_attributes)
+    with Pool(os.cpu_count()) as pool:
+        tokenizations = pool.map(f, documents)
+    docs = tuple(tokenization.tokens for tokenization in tokenizations)
+    language = path.split(os.path.sep).pop()
+    dims = [50, 100, 150, 200, 250, 300]
+    for embedding_dim in dims:
+        log.info('Fitting embedding with dimension %i', embedding_dim)
+        word2vec = Word2Vec(
+            sentences=docs,
+            size=embedding_dim,
+            workers=8,
+            min_count=0,
+            iter=15
+        )
+        log.info('Saving embedding')
+        output_path = output_path.replace(
+            '<dim>', str(embedding_dim)
+        ).replace('<lang>', language)
+        with open(output_path, 'wb') as f:
+            pickle.dump(word2vec, f)
+
+
+if __name__ == '__main__':
+    args = parse_args()
+    create_embeddings(**vars(args))
 
 

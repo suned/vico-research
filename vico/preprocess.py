@@ -28,7 +28,7 @@ def _useless_tags() -> List[str]:
     )
 
 
-def _remove_tags(doc: HTMLDocument) -> HTMLDocument:
+def remove_tags(doc: HTMLDocument) -> HTMLDocument:
     nothing = ''
     soup = BeautifulSoup(doc.html, 'lxml')
     for tag in _useless_tags():
@@ -41,11 +41,11 @@ def _remove_tags(doc: HTMLDocument) -> HTMLDocument:
 def remove_useless_tags(docs: Docs) -> Reader[Config, Docs]:
     log.info('Removing tags: %s', ', '.join(_useless_tags()))
     pool = Pool(os.cpu_count())
-    pdocs = pool.map(_remove_tags, docs)
+    pdocs = pool.map(remove_tags, docs)
     return Reader.pure(Docs(pdoc for pdoc in pdocs))
 
 
-def _html_tokenize(use_attributes, doc: HTMLDocument) -> Tokenization:
+def html_tokenize_document(use_attributes, doc: HTMLDocument) -> Tokenization:
     def format_attributes(tag: Tag) -> str:
         attributes = []
         for key, value in tag.attrs.items():
@@ -85,9 +85,9 @@ def _html_tokenize(use_attributes, doc: HTMLDocument) -> Tokenization:
 def html_tokenize(docs: Docs) -> Reader[Config, Tokenizations]:
     def _(config: Config) -> Reader[Config, Tokenizations]:
         log.info('HTML tokenizing documents')
-        pool = Pool(os.cpu_count())
-        tokenize = partial(_html_tokenize, config.use_attributes)
-        pdocs = pool.map(tokenize, docs.values)
+        with Pool(os.cpu_count()) as pool:
+            tokenize = partial(html_tokenize_document, config.use_attributes)
+            pdocs = pool.map(tokenize, docs.values)
         return Reader.pure(List(pdoc for pdoc in pdocs))
     return Reader.ask(Config) >> _
 
@@ -99,11 +99,12 @@ def simple_tokenize(docs: Docs) -> Reader[Config, Tokenizations]:
     return Reader.pure(docs | tokenize)
 
 
-def lowercase(docs: Tokenizations) -> Reader[Config, Tokenizations]:
-    def to_lower(t: Tokenization) -> Tokenization:
-        lower_tokens = t.tokens | (lambda token: token.lower())
-        return Tokenization(t.document, lower_tokens)
+def to_lower(t: Tokenization) -> Tokenization:
+    lower_tokens = t.tokens | (lambda token: token.lower())
+    return Tokenization(t.document, lower_tokens)
 
+
+def lowercase(docs: Tokenizations) -> Reader[Config, Tokenizations]:
     log.info('Lowercase documents')
     return Reader.pure(docs | to_lower)
 
