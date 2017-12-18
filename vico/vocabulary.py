@@ -23,23 +23,22 @@ class Vocabulary(Immutable):
     tokenizations: Tokenizations
 
     def embedding(self, config: Config) -> ndarray:
-        docs = tuple(tokenization.tokens for tokenization in self.tokenizations)
-        log.info('Fitting word2vec model')
-        word2vec = Word2Vec(
-            sentences=docs,
-            size=config.embedding_dim,
-            workers=8,
-            min_count=0,
-            iter=15
+        with open(config.embedding_path, 'rb') as embedding_file:
+            word2vec = pickle.load(embedding_file)
+        embeddings = random.uniform(
+            low=.01,
+            high=.1,
+            size=(self.size, word2vec.vector_size)
         )
-        embeddings = zeros((self.size, config.embedding_dim))
         for word, index in self.indices.items():
-            embeddings[index] = word2vec.wv[word]
+            if word in word2vec.wv:
+                embeddings[index] = word2vec.wv[word]
         embeddings[self.out_of_vocab_index] = random.normal(
             0,
             .01,
             config.embedding_dim
         )
+        embeddings[self.padding_index] = zeros(word2vec.vector_size)
         return embeddings
 
     @property
@@ -144,10 +143,10 @@ def create_embeddings(path, use_attributes, output_path):
             iter=15
         )
         log.info('Saving embedding')
-        output_path = output_path.replace(
+        file_path = output_path.replace(
             '<dim>', str(embedding_dim)
         ).replace('<lang>', language)
-        with open(output_path, 'wb') as f:
+        with open(file_path, 'wb') as f:
             pickle.dump(word2vec, f)
 
 

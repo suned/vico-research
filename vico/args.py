@@ -69,5 +69,11 @@ def get() -> Config:
         help='patience parameter for early stopping',
         default=default.patience
     )
+    parser.add_argument(
+        '--embedding-path',
+        type=str,
+        help='path to pre-trained embedding to load',
+        default=default.embedding_path
+    )
     args = parser.parse_args()
     return Config(**vars(args))

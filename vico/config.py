@@ -22,6 +22,7 @@ class Config(Immutable):
     filters = 10
     filter_sizes = [2, 3, 4, 5]
     seed = int(time.time())
+    embedding_path: str = 'embeddings/de-embeddings-50.pkl'
 
     def __repr__(self) -> str:
         return """Config(log_level={},
