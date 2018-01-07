@@ -75,5 +75,11 @@ def get() -> Config:
         help='path to pre-trained embedding to load',
         default=default.embedding_path
     )
+    parser.add_argument(
+        '--targets',
+        type=str,
+        nargs='+',
+        default=default.targets
+    )
     args = parser.parse_args()
     return Config(**vars(args))

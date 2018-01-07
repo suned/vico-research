@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Dict, Any
+from typing import Dict, Any, List
 from f import Immutable
 import time
 
@@ -19,9 +19,10 @@ class Config(Immutable):
     output_dir: str = "./reports"
     use_attributes: bool = False
     epochs: int = 500
-    filters = 10
-    filter_sizes = [2, 3, 4, 5]
-    seed = int(time.time())
+    filters: int = 10
+    filter_sizes: List[int] = [2, 3, 4, 5]
+    targets: List[str] = ['price']
+    seed: int = int(time.time())
     embedding_path: str = 'embeddings/de-embeddings-50.pkl'
 
     def __repr__(self) -> str:

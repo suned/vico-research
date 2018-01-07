@@ -11,14 +11,14 @@ class NotTokenizedError(Exception):
 
 class HTMLDocument(Immutable):
     html: str
-    brand: str = ''
-    gtin13: int = 0
-    ean: int = 0
-    asin: int = 0
-    sku: int = 0
-    price: float = .0
-    currency: str = ''
-    path: str = ''
+    brand: str = None
+    gtin13: int = None
+    ean: int = None
+    asin: int = None
+    sku: int = None
+    price: float = None
+    currency: str = None
+    path: str = None
 
     def set_html(self, html: str) -> 'HTMLDocument':
         d = self._asdict()

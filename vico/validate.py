@@ -37,8 +37,13 @@ def validate(folds: Folds) -> Reader[Config, None]:
         for fold, (train_docs, test_docs) in enumerate(folds):
             log.info('Starting fold %i of %i', fold + 1, config.folds)
             vocabulary = Vocabulary(train_docs)
-            network = train.early_stopping(train_docs, vocabulary, config)
-            report.save(network, vocabulary, train_docs, test_docs, config)
+            fitted_tasks = train.early_stopping(
+                train_docs,
+                test_docs,
+                vocabulary,
+                config
+            )
+            report.save(fitted_tasks, train_docs, test_docs, config)
         return Reader.pure(None)
     return Reader.ask(Config) >> _
 
@@ -51,6 +56,7 @@ def limit(n: int) -> Unary[DocIterator, Reader[Config, DocIterator]]:
 
 def k_cross() -> Reader[Config, None]:
     return (read.all_docs() >>
+            limit(100) >>
             preprocess.pipeline >>
             split >>
             validate)

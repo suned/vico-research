@@ -36,7 +36,7 @@ class Vocabulary(Immutable):
         embeddings[self.out_of_vocab_index] = random.normal(
             0,
             .01,
-            config.embedding_dim
+            word2vec.vector_size
         )
         embeddings[self.padding_index] = zeros(word2vec.vector_size)
         return embeddings
@@ -74,7 +74,7 @@ class Vocabulary(Immutable):
                 value=self.padding_index
             )
         )
-        labels = immutable_array(labeller(t.document) for t in batch)
+        labels = labeller(batch)
         return padded_sequences, labels
 
     @property
