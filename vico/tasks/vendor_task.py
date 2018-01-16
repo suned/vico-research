@@ -4,7 +4,7 @@ from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 from vico.html_document import Tokenization
 from vico.tasks.task import Task
-from numpy import ndarray, array
+from numpy import ndarray
 
 from vico.types import Tokenizations
 
@@ -13,25 +13,26 @@ def format_brand(brand: str) -> str:
     return brand.lower()
 
 
-class BrandTask(Task):
+class VendorTask(Task):
     def label(self, tokenization: Tokenization) -> str:
-        return format_brand(tokenization.document.brand)
+        return format_brand(tokenization.document.vendor)
 
     def filter_tokenizations(self, tokenizations: Tokenizations) -> Tokenizations:
-        return tokenizations.filter(lambda t: t.document.brand is not None)
+        return tokenizations.filter(lambda t: t.document.vendor is not None
+                                    and isinstance(t.document.vendor, str))
 
     label_encoder = None
     one_hot_encoder = None
 
     @property
     def name(self):
-        return 'brand'
+        return 'vendor'
 
     def encode_labels(self, tokenizations: Tokenizations) -> ndarray:
         if self.label_encoder is None:
             raise RuntimeError('Compile model must be called before label')
-        brands = tokenizations.map(self.label)
-        int_labels = self.label_encoder.transform(brands).reshape(-1, 1)
+        vendors = tokenizations.map(self.label)
+        int_labels = self.label_encoder.transform(vendors).reshape(-1, 1)
         return self.one_hot_encoder.transform(int_labels)
 
     def compile_model(self) -> Model:

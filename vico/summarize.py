@@ -21,8 +21,11 @@ def rmse(losses):
 def run():
     args = parse_args()
     data = pandas.read_csv(args.file)
-    print('Train RMSE: ', rmse(data.train_loss))
-    print('Test RMSE:', rmse(data.test_loss))
+    for column_name in data:
+        if 'loss' in column_name:
+            print(column_name, ':')
+            print('\tTrain RMSE : ', rmse(data[column_name]))
+            print('\tTest RMSE  : ', rmse(data[column_name]))
 
 
 if __name__ == "__main__":

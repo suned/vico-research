@@ -19,6 +19,7 @@ class HTMLDocument(Immutable):
     price: float = None
     currency: str = None
     path: str = None
+    vendor: str = None
 
     def set_html(self, html: str) -> 'HTMLDocument':
         d = self._asdict()

@@ -32,7 +32,7 @@ def early_stopping(train_tokenizations: Tokenizations,
         while True:
             task = random.choice(tasks)
             if task.epochs_without_improvement > config.patience:
-                total_epochs = sum([t.epoch for t in tasks])
+                total_epochs = sum([t.epoch - config.patience for t in tasks])
                 log.info(
                     'Patience exceeded on task %s. Found best epoch: %i',
                     task.name,

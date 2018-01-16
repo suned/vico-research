@@ -81,5 +81,10 @@ def get() -> Config:
         nargs='+',
         default=default.targets
     )
+    parser.add_argument(
+        '--filters',
+        type=int,
+        default=default.filters
+    )
     args = parser.parse_args()
     return Config(**vars(args))

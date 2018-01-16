@@ -44,7 +44,9 @@ class Task(ABC):
                  shared_layers
                  ):
         self.unique_labels = set(
-            self.label(t) for t in train_tokenizations + test_tokenizations
+            self.label(t) for t in self.filter_tokenizations(
+                train_tokenizations + test_tokenizations
+            )
         )
         self._vocabulary = vocabulary
         self._shared_layers = shared_layers
@@ -91,7 +93,8 @@ class Task(ABC):
         self._model.fit(
             sequences,
             labels,
-            epochs=1
+            epochs=1,
+            batch_size=16
         )
         self.epoch += 1
         test_loss = self.test_loss()
@@ -108,7 +111,7 @@ class Task(ABC):
         log.info('Fitting task %s on all data for 1 epoch', self.name)
         data = self._train_set + self._test_set
         sequences, labels = self._vocabulary.make_batch(data, self.encode_labels)
-        self._model.fit(sequences, labels, epochs=1)
+        self._model.fit(sequences, labels, epochs=1, batch_size=16)
 
     def test_loss(self, tokenizations: Tokenizations = None):
         if tokenizations is None:

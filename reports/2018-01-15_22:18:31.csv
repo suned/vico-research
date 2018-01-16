@@ -1,0 +1,2 @@
+embedding_dim,filters,price_train_samples,price_test_samples,price_train_loss,price_test_loss,vendor_train_samples,vendor_test_samples,vendor_train_loss,vendor_test_loss
+50,10,80,20,879.5932891845703,658.1598510742188,80,20,7.051670742034912,4.029523849487305

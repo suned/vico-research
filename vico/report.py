@@ -17,8 +17,10 @@ def save(fitted_tasks: [Task],
         [config.hyper_parameters()]
     )
     for task in fitted_tasks:
-        train_loss = task.test_loss(train_docs)
-        test_loss = task.test_loss(test_docs)
+        task_train_docs = task.filter_tokenizations(train_docs)
+        task_test_docs = task.filter_tokenizations(test_docs)
+        train_loss = task.test_loss(task_train_docs)
+        test_loss = task.test_loss(task_test_docs)
 
         data[task.name + '_train_samples'] = len(
             task.filter_tokenizations(train_docs)

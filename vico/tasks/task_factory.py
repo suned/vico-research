@@ -1,4 +1,4 @@
-from vico.tasks.brand_task import BrandTask
+from vico.tasks.vendor_task import VendorTask
 from vico.tasks.price_task import PriceTask
 from vico.tasks.task import Task
 
@@ -16,7 +16,7 @@ def create_factory(
                 vocabulary, 
                 shared_layers
             ),
-            'brand': BrandTask(
+            'vendor': VendorTask(
                 train_tokenizations,
                 test_tokenizations,
                 vocabulary, 

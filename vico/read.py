@@ -2,12 +2,21 @@ import os
 from f import Reader
 from pandas import DataFrame, Series, read_csv, to_numeric
 import logging
+import re
+from urllib.parse import urlparse
 
 from vico.config import Config
 from vico.html_document import HTMLDocument
 from vico.types import DocIterator
 
 log = logging.getLogger('vico.read')
+
+
+def _vendor(url):
+    parse = urlparse(url)
+    pattern = '(www\.)([a-z\-]*)(\.[a-z]*)'
+    m = re.match(pattern, parse.hostname)
+    return m[2] if m else None
 
 
 def all_docs() -> Reader[Config, DocIterator]:
@@ -58,7 +67,8 @@ def all_docs() -> Reader[Config, DocIterator]:
                         sku=sample.sku,
                         price=sample.price,
                         currency=sample.currency,
-                        path=get_file_path(sample)
+                        path=get_file_path(sample),
+                        vendor=_vendor(sample.url)
                     )
                 except FileNotFoundError:
                     log.debug('File not found: %s', get_file_path(sample))
