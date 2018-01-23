@@ -1,6 +1,6 @@
 from f import Reader, Unary
 from pandas import Series
-from sklearn.model_selection import KFold
+from sklearn.model_selection import LeaveOneGroupOut
 from itertools import islice
 
 from vico import train, read, report, args
@@ -21,8 +21,9 @@ def split(tokenizations: Tokenizations) -> Reader[Config, Folds]:
     def _(config: Config) -> Reader[Config, Folds]:
         def generate() -> Folds:
             ts_series = Series(tokenizations)
-            splitter = KFold(n_splits=config.folds)
-            folds = splitter.split(ts_series)
+            groups = [t.document.language for t in tokenizations]
+            labels = [t.document.brand for t in tokenizations]
+            folds = LeaveOneGroupOut().split(ts_series, labels, groups)
             for train_indices, test_indices in folds:
                 train_set = ts_series[train_indices]
                 test_set = ts_series[test_indices]
@@ -36,7 +37,7 @@ def validate(folds: Folds) -> Reader[Config, None]:
     def _(config: Config):
         for fold, (train_docs, test_docs) in enumerate(folds):
             log.info('Starting fold %i of %i', fold + 1, config.folds)
-            vocabulary = Vocabulary(train_docs)
+            vocabulary = Vocabulary(train_docs, test_docs)
             fitted_tasks = train.early_stopping(
                 train_docs,
                 test_docs,
@@ -50,14 +51,13 @@ def validate(folds: Folds) -> Reader[Config, None]:
 
 def limit(n: int) -> Unary[DocIterator, Reader[Config, DocIterator]]:
     def _(docs: DocIterator) -> Reader[Config, DocIterator]:
-        return Reader.pure(islice(docs, n))
+        return Reader.pure(docs[:n])
     return _
 
 
-def k_cross() -> Reader[Config, None]:
-    return (read.all_docs() >>
+def leave_one_language_out() -> Reader[Config, None]:
+    return (read.from_csv() >>
             limit(100) >>
-            preprocess.pipeline >>
             split >>
             validate)
 
@@ -66,5 +66,5 @@ if __name__ == '__main__':
     def run() -> None:
         config = args.get()
         configure_root_logger(config)
-        k_cross()(config)
+        leave_one_language_out()(config)
     run()

@@ -20,6 +20,7 @@ class HTMLDocument(Immutable):
     currency: str = None
     path: str = None
     vendor: str = None
+    language: str = None
 
     def set_html(self, html: str) -> 'HTMLDocument':
         d = self._asdict()

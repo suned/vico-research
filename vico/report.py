@@ -19,8 +19,8 @@ def save(fitted_tasks: [Task],
     for task in fitted_tasks:
         task_train_docs = task.filter_tokenizations(train_docs)
         task_test_docs = task.filter_tokenizations(test_docs)
-        train_loss = task.test_loss(task_train_docs)
-        test_loss = task.test_loss(task_test_docs)
+        train_loss = task.loss(task_train_docs)
+        test_loss = task.loss(task_test_docs)
 
         data[task.name + '_train_samples'] = len(
             task.filter_tokenizations(train_docs)
@@ -30,6 +30,8 @@ def save(fitted_tasks: [Task],
         )
         data[task.name + '_train_loss'] = train_loss
         data[task.name + '_test_loss'] = test_loss
+    data['test_language'] = test_docs.head.document.language
+    data['train_language'] = train_docs.head.document.language
     out_dir = config.output_dir
     output_file = config.output_file
     os.makedirs(out_dir, exist_ok=True)

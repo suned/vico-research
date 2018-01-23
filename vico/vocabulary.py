@@ -15,30 +15,32 @@ from vico.preprocess import html_tokenize_document, to_lower
 from vico.types import Batch, Labeller, Tokenizations
 from vico.config import Config
 from numpy import ndarray, zeros, random
+from . import fasttext
 
 log = logging.getLogger('vico.vocabulary')
 
 
 class Vocabulary(Immutable):
-    tokenizations: Tokenizations
+    train_tokenizations: Tokenizations
+    test_tokenizations: Tokenizations
 
     def embedding(self, config: Config) -> ndarray:
         with open(config.embedding_path, 'rb') as embedding_file:
-            word2vec = pickle.load(embedding_file)
+            fasttext_vectors = pickle.load(embedding_file)
         embeddings = random.uniform(
             low=.01,
             high=.1,
-            size=(self.size, word2vec.vector_size)
+            size=(self.size, 300)
         )
-        for word, index in self.indices.items():
-            if word in word2vec.wv:
-                embeddings[index] = word2vec.wv[word]
+        indices = self.indices
+        for word, index in indices.items():
+            embeddings[index] = fasttext_vectors[word]
         embeddings[self.out_of_vocab_index] = random.normal(
             0,
             .01,
-            word2vec.vector_size
+            300
         )
-        embeddings[self.padding_index] = zeros(word2vec.vector_size)
+        embeddings[self.padding_index] = zeros(300)
         return embeddings
 
     @property
@@ -49,14 +51,21 @@ class Vocabulary(Immutable):
 
     @property
     def unique_tokens(self) -> Set[Token]:
-        return {token for tokenization in self.tokenizations
+        return {token for tokenization in
+                self.train_tokenizations + self.test_tokenizations
                 for token in tokenization.tokens}
+
+    @property
+    def languages(self):
+        return {t.document.language for t in
+                self.train_tokenizations + self.test_tokenizations
+                if t.document.language}
 
     def __len__(self):
         return self.size
 
     def make_batch(self, batch: Tokenizations, labeller: Labeller):
-        maxlen = preprocess.maxlen(self.tokenizations)
+        maxlen = preprocess.maxlen(self.train_tokenizations)
         indices = self.indices
         out_of_vocab_index = self.out_of_vocab_index
 

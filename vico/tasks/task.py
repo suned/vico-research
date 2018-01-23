@@ -24,6 +24,7 @@ log = logging.getLogger('vico.task')
 
 
 class Task(ABC):
+    target = False
     @property
     @abstractmethod
     def name(self):
@@ -79,6 +80,9 @@ class Task(ABC):
     def label(self, tokenization: Tokenization) -> Any:
         pass
 
+    def compare(self, metric):
+        return metric < self.best_loss
+
     def reset(self):
         self._model = self.compile_model()
         self.epoch = None
@@ -97,8 +101,8 @@ class Task(ABC):
             batch_size=16
         )
         self.epoch += 1
-        test_loss = self.test_loss()
-        if test_loss < self.best_loss:
+        test_loss = self.loss()
+        if self.compare(test_loss):
             log.info('New best loss found. '
                      'Resetting epochs without improvement for task: %s',
                      self.name)
@@ -113,7 +117,7 @@ class Task(ABC):
         sequences, labels = self._vocabulary.make_batch(data, self.encode_labels)
         self._model.fit(sequences, labels, epochs=1, batch_size=16)
 
-    def test_loss(self, tokenizations: Tokenizations = None):
+    def loss(self, tokenizations: Tokenizations = None):
         if tokenizations is None:
             sequences, labels = self._vocabulary.make_batch(
                 self._test_set,

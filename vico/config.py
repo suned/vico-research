@@ -21,9 +21,9 @@ class Config(Immutable):
     epochs: int = 500
     filters: int = 10
     filter_sizes: List[int] = [2, 3, 4, 5]
-    targets: List[str] = ['price']
+    targets: List[str] = ['brand']
     seed: int = int(time.time())
-    embedding_path: str = 'embeddings/de-embeddings-50.pkl'
+    embedding_path: str = 'data/transformed_embedding.pkl'
 
     def __repr__(self) -> str:
         return """Config(log_level={},

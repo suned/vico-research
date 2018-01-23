@@ -1,0 +1,3 @@
+embedding_dim,filters,brand_train_samples,brand_test_samples,brand_train_loss,brand_test_loss
+50,10,26,74,0.024242424242424246,0.017283950617283952
+50,10,74,26,0.03333333333333334,0.0

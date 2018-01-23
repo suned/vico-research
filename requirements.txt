@@ -15,3 +15,4 @@ git+https://github.com/suned/f.git
 pytest
 gensim
 scrapy
+langdetect

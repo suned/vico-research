@@ -9,30 +9,26 @@ from numpy import ndarray
 from vico.types import Tokenizations
 
 
-def format_brand(brand: str) -> str:
-    return brand.lower()
-
-
-class VendorTask(Task):
+class LanguageTask(Task):
     def label(self, tokenization: Tokenization) -> str:
-        return tokenization.document.vendor
+        return tokenization.document.language
 
     def filter_tokenizations(self, tokenizations: Tokenizations) -> Tokenizations:
-        return tokenizations.filter(lambda t: t.document.vendor is not None
-                                    and isinstance(t.document.vendor, str))
+        return tokenizations.filter(lambda t: t.document.language is not None
+                                    and isinstance(t.document.language, str))
 
     label_encoder = None
     one_hot_encoder = None
 
     @property
     def name(self):
-        return 'vendor'
+        return 'language'
 
     def encode_labels(self, tokenizations: Tokenizations) -> ndarray:
         if self.label_encoder is None:
             raise RuntimeError('Compile model must be called before label')
-        vendors = tokenizations.map(self.label)
-        int_labels = self.label_encoder.transform(vendors).reshape(-1, 1)
+        languages = tokenizations.map(self.label)
+        int_labels = self.label_encoder.transform(languages).reshape(-1, 1)
         return self.one_hot_encoder.transform(int_labels)
 
     def compile_model(self) -> Model:

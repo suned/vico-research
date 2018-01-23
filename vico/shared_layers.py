@@ -22,6 +22,7 @@ def get_embedding_layer(vocab: Vocabulary, config: Config) -> Layer:
     return Embedding(
         input_dim=vocab.size,
         output_dim=embedding_dim,
+        trainable=False,
         mask_zero=False,
         name='embedding_layer',
         embeddings_initializer=RandomUniform(seed=config.seed),
