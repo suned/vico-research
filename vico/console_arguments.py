@@ -1,7 +1,9 @@
 import argparse
 import logging
 
-from vico.config import Config
+from serum import Component
+
+from vico import Config
 
 
 class LogLevelAction(argparse.Action):
@@ -10,7 +12,7 @@ class LogLevelAction(argparse.Action):
         setattr(namespace, self.dest, log_level)
 
 
-def get() -> Config:
+def _get(_) -> Config:
     default = Config()
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -86,5 +88,15 @@ def get() -> Config:
         type=int,
         default=default.filters
     )
+    parser.add_argument(
+        '--n-samples',
+        type=int,
+        default=default.n_samples
+    )
     args = parser.parse_args()
     return Config(**vars(args))
+
+
+class ConsoleArguments(Component):
+    get = _get
+

@@ -16,3 +16,4 @@ pytest
 gensim
 scrapy
 langdetect
+serum

@@ -1,5 +1,6 @@
 import os
-from f import List, Immutable
+from typing import List
+from f import Immutable
 
 Token = str
 Tokens = List[Token]
@@ -21,14 +22,17 @@ class HTMLDocument(Immutable):
     path: str = None
     vendor: str = None
     language: str = None
+    tokens: Tokens = None
 
     def set_html(self, html: str) -> 'HTMLDocument':
         d = self._asdict()
         d['html'] = html
         return HTMLDocument(**d)
 
-    def set_tokens(self, tokens: List[Token]) -> 'Tokenization':
-        return Tokenization(document=self, tokens=tokens)
+    def set_tokens(self, tokens: List[Token]) -> 'HTMLDocument':
+        d = vars(self)
+        d['tokens'] = tokens
+        return HTMLDocument(**d)
 
     def __repr__(self) -> str:
         def value_or_none(value):
@@ -59,8 +63,3 @@ class HTMLDocument(Immutable):
             value_or_none(self.currency),
             value_or_none(self.path)
         )
-
-
-class Tokenization(Immutable):
-    document: HTMLDocument
-    tokens: List[Token]

@@ -7,7 +7,7 @@ from f import List, Reader, compose
 import nltk
 from bs4 import BeautifulSoup, Tag, Doctype, NavigableString, Comment
 
-from vico.html_document import HTMLDocument, Tokenization
+from vico.html_document import HTMLDocument, HTMLDocument
 from vico.types import Docs, DocIterator, Tokenizations
 from vico.config import Config
 
@@ -58,7 +58,7 @@ def remove_useless_tags(docs: Docs) -> Reader[Config, Docs]:
     return Reader.pure(Docs(pdoc for pdoc in pdocs))
 
 
-def html_tokenize_document(use_attributes, doc: HTMLDocument) -> Tokenization:
+def html_tokenize_document(use_attributes, doc: HTMLDocument) -> HTMLDocument:
     def format_attributes(tag: Tag) -> str:
         attributes = []
         for key, value in tag.attrs.items():
@@ -106,15 +106,15 @@ def html_tokenize(docs: Docs) -> Reader[Config, Tokenizations]:
 
 
 def simple_tokenize(docs: Docs) -> Reader[Config, Tokenizations]:
-    def tokenize(doc: HTMLDocument) -> Tokenization:
+    def tokenize(doc: HTMLDocument) -> HTMLDocument:
         tokens = doc.html.split(' ')
         return doc.set_tokens(List(t for t in tokens))
     return Reader.pure(docs | tokenize)
 
 
-def to_lower(t: Tokenization) -> Tokenization:
+def to_lower(t: HTMLDocument) -> HTMLDocument:
     lower_tokens = t.tokens | (lambda token: token.lower())
-    return Tokenization(t.document, lower_tokens)
+    return HTMLDocument(t.document, lower_tokens)
 
 
 def lowercase(docs: Tokenizations) -> Reader[Config, Tokenizations]:
@@ -122,8 +122,8 @@ def lowercase(docs: Tokenizations) -> Reader[Config, Tokenizations]:
     return Reader.pure(docs | to_lower)
 
 
-def maxlen(tokenizations: Tokenizations) -> int:
-    return max(len(t.tokens) for t in tokenizations)
+def maxlen(documents: [HTMLDocument]) -> int:
+    return max(len(doc.tokens) for doc in documents)
 
 
 def pipeline(docs: DocIterator) -> Reader[Config, Tokenizations]:

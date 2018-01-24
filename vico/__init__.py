@@ -1,7 +1,6 @@
 import logging
 from typing import TypeVar, Iterable
 
-from vico import args
 from vico.config import Config
 from numpy import ndarray, array
 

@@ -1,96 +1,92 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Tuple, Any
+from typing import Tuple, Any, List
 
 from keras import Model
 from pandas import Series
+from serum import inject, immutable
 from sklearn.model_selection import train_test_split
 
-from f import List
 from vico import preprocess
-from vico.html_document import Tokenization
-from vico.types import Tokenizations
+from vico.cross_validation_split import CrossValidationSplit
+from vico.html_document import HTMLDocument
+from vico.shared_layers import SharedLayers
 from vico.vocabulary import Vocabulary
 from numpy import ndarray
 
 
-def split(tokenizations) -> Tuple[List[Tokenization], List[Tokenization]]:
-    ts_series = Series(tokenizations)
-    train_set, test_set = train_test_split(ts_series, test_size=.2)
-    return List(train_set), List(test_set)
+def split(documents) -> Tuple[List[HTMLDocument], List[HTMLDocument]]:
+    doc_series = Series(documents)
+    train_set, test_set = train_test_split(doc_series, test_size=.2)
+    return list(train_set), list(test_set)
 
 
 log = logging.getLogger('vico.task')
 
 
 class Task(ABC):
-    target = False
+    cross_validation_split = inject(CrossValidationSplit)
+    target = immutable(False)
+    vocabulary = inject(Vocabulary)
+    shared_layers = inject(SharedLayers)
+
     @property
     @abstractmethod
-    def name(self):
+    def name(self) -> str:
         pass
 
     @property
-    def tokenizations(self) -> Tokenizations:
-        return self._train_set + self._test_set
+    @abstractmethod
+    def scoring_function(self) -> str:
+        pass
 
     @property
-    def input_length(self):
-        return preprocess.maxlen(self.tokenizations)
+    def input_length(self) -> int:
+        return preprocess.maxlen(self.cross_validation_split.documents)
 
-    def __init__(self,
-                 train_tokenizations: Tokenizations,
-                 test_tokenizations: Tokenizations,
-                 vocabulary: Vocabulary,
-                 shared_layers
-                 ):
+    def __init__(self):
         self.unique_labels = set(
-            self.label(t) for t in self.filter_tokenizations(
-                train_tokenizations + test_tokenizations
+            self.label(d) for d in self.filter_documents(
+                self.cross_validation_split.documents
             )
         )
-        self._vocabulary = vocabulary
-        self._shared_layers = shared_layers
-        train_tokenizations = self.filter_tokenizations(train_tokenizations)
-        self._train_set, self._test_set = split(train_tokenizations)
+        train_documents = self.filter_documents(
+            self.cross_validation_split.train_documents
+        )
+        self._train_set, self._early_stopping_set = split(train_documents)
         self._model = self.compile_model()
         self.epoch = 0
         self.epochs_without_improvement = 0
-        self.best_loss = float('inf')
-
-    def get_train_batch(self) -> Tuple[ndarray, ndarray]:
-        return self._vocabulary.make_batch(
-            self._train_set,
-            self.label
-        )
+        self.best_score = float('inf')
 
     @abstractmethod
-    def filter_tokenizations(self, tokenizations) -> Tokenizations:
-        pass
+    def filter_documents(self, documents: [HTMLDocument]) -> [HTMLDocument]:
+        raise NotImplementedError()
 
     @abstractmethod
     def compile_model(self) -> Model:
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
-    def encode_labels(self, tokenization: Tokenizations) -> ndarray:
-        pass
+    def encode_labels(self, documents: [HTMLDocument]) -> ndarray:
+        raise NotImplementedError()
 
     @abstractmethod
-    def label(self, tokenization: Tokenization) -> Any:
-        pass
+    def label(self, document: HTMLDocument) -> Any:
+        raise NotImplementedError()
 
-    def compare(self, metric):
-        return metric < self.best_loss
+    def is_best_score(self, metric: float) -> bool:
+        return metric < self.best_score
 
-    def reset(self):
+    def recompile(self):
+        log.info('recompiling %s', self.name)
         self._model = self.compile_model()
-        self.epoch = None
-        self.epochs_without_improvement = None
+        self.epoch = 0
+        self.epochs_without_improvement = 0
 
     def fit_early_stopping(self):
         log.info('Fitting one epoch early stopping on task: %s', self.name)
-        sequences, labels = self._vocabulary.make_batch(
+        sequences, labels = self.vocabulary.make_batch(
             self._train_set,
             self.encode_labels
         )
@@ -101,32 +97,40 @@ class Task(ABC):
             batch_size=16
         )
         self.epoch += 1
-        test_loss = self.loss()
-        if self.compare(test_loss):
+        early_stopping_score = self.early_stopping_score()
+        if self.is_best_score(early_stopping_score):
             log.info('New best loss found. '
                      'Resetting epochs without improvement for task: %s',
                      self.name)
-            self.best_loss = test_loss
+            self.best_score = early_stopping_score
             self.epochs_without_improvement = 0
         else:
             self.epochs_without_improvement += 1
 
     def fit(self):
         log.info('Fitting task %s on all data for 1 epoch', self.name)
-        data = self._train_set + self._test_set
-        sequences, labels = self._vocabulary.make_batch(data, self.encode_labels)
+        data = self._train_set + self._early_stopping_set
+        sequences, labels = self.vocabulary.make_batch(data, self.encode_labels)
         self._model.fit(sequences, labels, epochs=1, batch_size=16)
 
-    def loss(self, tokenizations: Tokenizations = None):
-        if tokenizations is None:
-            sequences, labels = self._vocabulary.make_batch(
-                self._test_set,
-                self.encode_labels
-            )
-        else:
-            tokenizations = self.filter_tokenizations(tokenizations)
-            sequences, labels = self._vocabulary.make_batch(
-                tokenizations,
-                self.encode_labels
-            )
+    def train_score(self) -> float:
+        documents = self.filter_documents(
+            self.cross_validation_split.train_documents
+        )
+        return self.score(documents)
+
+    def score(self, documents) -> float:
+        sequences, labels = self.vocabulary.make_batch(
+            documents,
+            self.encode_labels
+        )
         return self._model.evaluate(sequences, labels)
+
+    def test_score(self) -> float:
+        documents = self.filter_documents(
+            self.cross_validation_split.test_documents
+        )
+        return self.score(documents)
+
+    def early_stopping_score(self) -> float:
+        return self.score(self._early_stopping_set)

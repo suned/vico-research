@@ -24,6 +24,7 @@ class Config(Immutable):
     targets: List[str] = ['brand']
     seed: int = int(time.time())
     embedding_path: str = 'data/transformed_embedding.pkl'
+    n_samples: int = None
 
     def __repr__(self) -> str:
         return """Config(log_level={},
