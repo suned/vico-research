@@ -1,9 +1,9 @@
 import logging
 
-from serum import inject, Singleton
+from serum import inject, Singleton, Component
 
 from vico.console_arguments import ConsoleArguments
-from vico.shared_layers import SharedLayers
+from vico.shared_layers import SharedLayersBuilder
 from vico.tasks.brand_task import BrandTask
 from vico.tasks.language_task import LanguageTask
 from vico.tasks.price_task import PriceTask
@@ -14,33 +14,21 @@ from vico.tasks.vendor_task import VendorTask
 log = logging.getLogger('vico.tasks')
 
 
-def task_factory(target: str) -> Task:
-    return {
-        'price': PriceTask(),
-        'vendor': VendorTask(),
-        'brand': BrandTask(),
-        'language': LanguageTask()
-    }[target]
-
-
-class Tasks(Singleton):
+class TaskBuilder(Component):
     args = inject(ConsoleArguments)
-    shared_layers = inject(SharedLayers)
+    shared_layers_builder = inject(SharedLayersBuilder)
 
-    def __init__(self):
+    def build(self) -> [Task]:
+        shared_layers = self.shared_layers_builder.build()
+
+        def task_factory(target: str) -> Task:
+            return {
+                'price': PriceTask(shared_layers),
+                'vendor': VendorTask(shared_layers),
+                'brand': BrandTask(shared_layers),
+                'language': LanguageTask(shared_layers)
+            }[target]
         config = self.args.get()
-        self._tasks = [task_factory(target) for target in config.targets]
-
-    def recompile(self):
         log.info('recompiling models')
-        self.shared_layers.recompile()
-        [t.recompile() for t in self]
 
-    def __iter__(self):
-        return iter(self._tasks)
-
-    def __len__(self):
-        return len(self._tasks)
-
-    def __getitem__(self, item):
-        return self._tasks[item]
+        return [task_factory(target) for target in config.targets]

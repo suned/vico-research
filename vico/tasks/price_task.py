@@ -29,7 +29,7 @@ class PriceTask(Task):
             shape=(self.input_length,),
             name='token_input'
         )
-        shared_tensor = self.shared_layers(input_layer)
+        shared_tensor = self._shared_layers(input_layer)
         output = Dense(
             1,
             activation='linear',

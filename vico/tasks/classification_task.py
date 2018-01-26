@@ -5,6 +5,7 @@ from typing import Any
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 from vico.html_document import HTMLDocument
+from vico.shared_layers import SharedLayers
 from vico.tasks.task import Task
 from numpy import ndarray
 from keras import Model, Input
@@ -15,10 +16,10 @@ log = logging.getLogger('vico.tasks.classification_task')
 
 
 class ClassificationTask(Task):
-    def __init__(self):
+    def __init__(self, shared_layers: SharedLayers):
         self.label_encoder = None
         self.one_hot_encoder = None
-        super().__init__()
+        super().__init__(shared_layers)
 
     @property
     @abstractmethod
@@ -55,7 +56,7 @@ class ClassificationTask(Task):
             shape=(self.input_length,),
             name='token_input'
         )
-        shared_tensor = self.shared_layers(input_layer)
+        shared_tensor = self._shared_layers(input_layer)
         classes = len(self.unique_labels)
         output = Dense(
             classes,

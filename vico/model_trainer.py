@@ -1,31 +1,30 @@
 from serum import Component, inject
 
 from vico.console_arguments import ConsoleArguments
-from vico.tasks import Tasks
+from vico.tasks import TaskBuilder, Task
 
 import logging
 import random
-from vico.tasks.task import Task
 
 log = logging.getLogger('vico.train')
 
 
 class ModelTrainer(Component):
-    tasks = inject(Tasks)
+    task_builder = inject(TaskBuilder)
     args = inject(ConsoleArguments)
 
-    def fit_tasks(self):
+    def fit_tasks(self) -> [Task]:
         config = self.args.get()
 
-        def find_best_epoch() -> int:
+        def find_best_epoch(ts) -> int:
             log.info('Finding best epoch')
             while True:
-                task = random.choice(self.tasks)
+                task = random.choice(ts)
                 epochs_without_improvement = task.epochs_without_improvement
                 patience_exceeded = epochs_without_improvement > config.patience
                 if task.target and patience_exceeded:
                     total_epochs = sum([t.epoch - config.patience
-                                        for t in self.tasks])
+                                        for t in ts])
                     log.info(
                         'Patience exceeded on task %s. Found best epoch: %i',
                         task.name,
@@ -34,14 +33,15 @@ class ModelTrainer(Component):
                     return total_epochs
                 task.fit_early_stopping()
 
-        def fit_on_all_data(epochs) -> [Task]:
+        def fit_on_all_data(epochs, ts):
             log.info('Fitting on all data')
             for epoch in range(epochs):
-                log.info('Epoch: %i', epoch + 1)
-                task = random.choice(self.tasks)
+                log.info('Epoch: %i of %i', epoch + 1, epochs)
+                task = random.choice(ts)
                 task.fit()
-            return self.tasks
 
-        best_epoch = find_best_epoch()
-        self.tasks.recompile()
-        fit_on_all_data(best_epoch)
+        tasks = self.task_builder.build()
+        best_epoch = find_best_epoch(tasks)
+        tasks = self.task_builder.build()
+        fit_on_all_data(best_epoch, tasks)
+        return tasks

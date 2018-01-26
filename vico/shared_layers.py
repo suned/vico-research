@@ -1,37 +1,43 @@
 import logging
-from typing import Tuple
+from typing import Tuple, NamedTuple, List
 
+from f import Immutable
 from keras.models import Layer
 from keras.initializers import RandomUniform, glorot_uniform
 from keras.layers import Embedding, Conv1D, GlobalMaxPool1D, concatenate
-from serum import inject, Singleton
+from serum import inject, Singleton, Component
 from vico.console_arguments import ConsoleArguments
 from vico.vocabulary import Vocabulary
 
 log = logging.getLogger('vico.shared_layers')
 
 
-class SharedLayers(Singleton):
-    vocabulary = inject(Vocabulary)
-    args = inject(ConsoleArguments)
-
-    def __init__(self):
-        self._embedding_layer = self.get_embedding_layer()
-        self._convolutions = self.get_convolutional_layers()
-
-    def recompile(self):
-        log.info('Recompiling shared layers')
-        self._embedding_layer = self.get_embedding_layer()
-        self._convolutions = self.get_convolutional_layers()
+class SharedLayers(Immutable):
+    embedding_layer: Layer
+    convolutions: Tuple[Layer]
 
     def __call__(self, input_layer):
-        embedding_tensor = self._embedding_layer(input_layer)
+        embedding_tensor = self.embedding_layer(input_layer)
         pooling_tensors = []
-        for convolutional_layer in self._convolutions:
+        for convolutional_layer in self.convolutions:
             convolutional_tensor = convolutional_layer(embedding_tensor)
             pooling_tensor = GlobalMaxPool1D()(convolutional_tensor)
             pooling_tensors.append(pooling_tensor)
         return concatenate(pooling_tensors)
+
+
+class SharedLayersBuilder(Component):
+    vocabulary = inject(Vocabulary)
+    args = inject(ConsoleArguments)
+
+    def build(self) -> SharedLayers:
+        log.info('Recompiling shared layers')
+        embedding_layer = self.get_embedding_layer()
+        convolutions = self.get_convolutional_layers()
+        return SharedLayers(
+            embedding_layer=embedding_layer,
+            convolutions=convolutions
+        )
 
     def get_embedding_layer(self) -> Layer:
         vocab = self.vocabulary

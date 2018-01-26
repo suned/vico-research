@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 from vico import preprocess
 from vico.cross_validation_split import CrossValidationSplit
 from vico.html_document import HTMLDocument
-from vico.shared_layers import SharedLayers
+from vico.shared_layers import SharedLayersBuilder, SharedLayers
 from vico.vocabulary import Vocabulary
 from numpy import ndarray
 
@@ -28,7 +28,6 @@ class Task(ABC):
     cross_validation_split = inject(CrossValidationSplit)
     target = immutable(False)
     vocabulary = inject(Vocabulary)
-    shared_layers = inject(SharedLayers)
 
     @property
     @abstractmethod
@@ -44,7 +43,8 @@ class Task(ABC):
     def input_length(self) -> int:
         return preprocess.maxlen(self.cross_validation_split.documents)
 
-    def __init__(self):
+    def __init__(self, shared_layers: SharedLayers):
+        self._shared_layers = shared_layers
         self.unique_labels = set(
             self.label(d) for d in self.filter_documents(
                 self.cross_validation_split.documents

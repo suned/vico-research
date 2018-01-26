@@ -12,6 +12,10 @@ from vico.html_document import HTMLDocument
 log = logging.getLogger('vico.read')
 
 
+def parse_list(l):
+    return ast.literal_eval(l) if l else None
+
+
 class DataSetReader(Component):
     args = inject(ConsoleArguments)
 
@@ -22,7 +26,7 @@ class DataSetReader(Component):
         n_samples = self.args.get().n_samples
         samples = pandas.read_csv(
             sample_path,
-            converters={'tokens': lambda v: ast.literal_eval(v) if v else None},
+            converters={'tokens': parse_list, 'brand_bio_labels': parse_list},
             nrows=n_samples
         )
         docs = []
@@ -39,7 +43,8 @@ class DataSetReader(Component):
                 path=sample.path,
                 vendor=sample.vendor,
                 language=sample.language,
-                tokens=sample.tokens
+                tokens=sample.tokens,
+                brand_bio_labels=sample.brand_bio_labels
             )
             if i == n_samples:
                 break

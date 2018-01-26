@@ -2,6 +2,7 @@ from serum import immutable
 from sklearn.metrics import f1_score
 
 from vico.html_document import HTMLDocument
+from vico.shared_layers import SharedLayers
 from vico.tasks.classification_task import ClassificationTask
 
 
@@ -16,8 +17,8 @@ class BrandTask(ClassificationTask):
     def scoring_function(self):
         return 'f1'
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, shared_layers: SharedLayers):
+        super().__init__(shared_layers)
         self.best_score = float('-inf')
 
     def is_best_score(self, f1):

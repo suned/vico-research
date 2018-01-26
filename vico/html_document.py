@@ -23,6 +23,7 @@ class HTMLDocument(Immutable):
     vendor: str = None
     language: str = None
     tokens: Tokens = None
+    brand_bio_labels: Tokens = None
 
     def set_html(self, html: str) -> 'HTMLDocument':
         d = self._asdict()

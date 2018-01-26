@@ -6,23 +6,22 @@ from serum import Component, inject
 
 from vico.console_arguments import ConsoleArguments
 from vico.cross_validation_split import CrossValidationSplit
-from vico.tasks import Tasks
+from vico.tasks import Task
 
 log = logging.getLogger("vico.report")
 
 
 class Evaluator(Component):
     args = inject(ConsoleArguments)
-    tasks = inject(Tasks)
     cross_validation_split = inject(CrossValidationSplit)
 
-    def evaluate(self):
+    def evaluate(self, tasks: [Task]):
         log.info('Saving validation metrics')
         config = self.args.get()
         data = pandas.DataFrame(
             [config.hyper_parameters()]
         )
-        for task in self.tasks:
+        for task in tasks:
             data[task.name + '_train_samples'] = len(
                 task.filter_documents(self.cross_validation_split.train_documents)
             )

@@ -6,7 +6,7 @@ from vico.console_arguments import ConsoleArguments
 from vico.cross_validation_split import CrossValidationSplit, LeaveOneLanguageOut
 from vico.evaluator import Evaluator
 from vico.model_trainer import ModelTrainer
-from vico.tasks import Tasks
+from vico.tasks import TaskBuilder
 from . import configure_root_logger
 
 
@@ -17,7 +17,7 @@ class Experiment:
     cross_validation_split = inject(CrossValidationSplit)
     model_trainer = inject(ModelTrainer)
     evaluator = inject(Evaluator)
-    tasks = inject(Tasks)
+    tasks = inject(TaskBuilder)
 
     def run(self):
         for i, _ in enumerate(self.cross_validation_split):
@@ -26,9 +26,8 @@ class Experiment:
                 i + 1,
                 len(self.cross_validation_split) + 1
             )
-            self.model_trainer.fit_tasks()
-            self.evaluator.evaluate()
-            self.tasks.recompile()
+            tasks = self.model_trainer.fit_tasks()
+            self.evaluator.evaluate(tasks)
 
 
 if __name__ == '__main__':
