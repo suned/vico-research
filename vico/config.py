@@ -25,6 +25,7 @@ class Config(Immutable):
     seed: int = int(time.time())
     embedding_path: str = 'data/transformed_embedding.pkl'
     n_samples: int = None
+    window_size: int = 5
 
     def __repr__(self) -> str:
         return """Config(log_level={},

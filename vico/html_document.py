@@ -1,6 +1,7 @@
 import os
 from typing import List
 from f import Immutable
+from numpy import ndarray
 
 Token = str
 Tokens = List[Token]
@@ -23,7 +24,8 @@ class HTMLDocument(Immutable):
     vendor: str = None
     language: str = None
     tokens: Tokens = None
-    brand_bio_labels: Tokens = None
+    brand_bio_labels: ndarray = None
+    windows: ndarray = None
 
     def set_html(self, html: str) -> 'HTMLDocument':
         d = self._asdict()

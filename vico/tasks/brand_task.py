@@ -1,16 +1,17 @@
 from serum import immutable
 from sklearn.metrics import f1_score
-
+from numpy import ndarray
 from vico.html_document import HTMLDocument
 from vico.shared_layers import SharedLayers
-from vico.tasks.classification_task import ClassificationTask
+from .sequence_classification_task import SequenceClassificationTask
 
 
 def format_brand(brand: str) -> str:
     return brand.lower()
 
 
-class BrandTask(ClassificationTask):
+class BrandTask(SequenceClassificationTask):
+
     target = immutable(True)
 
     @property
@@ -24,25 +25,20 @@ class BrandTask(ClassificationTask):
     def is_best_score(self, f1):
         return f1 > self.best_score
 
-    def label(self, document: HTMLDocument) -> str:
-        return format_brand(document.brand)
-
     def filter_documents(self, documents: [HTMLDocument]) -> [HTMLDocument]:
         return [d for d in documents
-                if d.brand is not None and isinstance(d.brand, str)]
+                if d.brand_bio_labels is not None and isinstance(
+                    d.brand_bio_labels,
+                    ndarray
+                )
+                ]
 
     @property
     def name(self):
         return 'brand'
 
-    def score(self, documents: [HTMLDocument]):
-        documents = self.filter_documents(documents)
-        sequences, labels = self.vocabulary.make_batch(
-            documents,
-            self.encode_labels
-        )
-        predictions = self._model.predict(sequences)
-        predicted_int_labels = predictions.argmax(axis=1)
-        actual_labels = [self.label(t) for t in documents]
-        actual_int_labels = self.label_encoder.transform(actual_labels)
-        return f1_score(actual_int_labels, predicted_int_labels, average='macro')
+    def _score(self, windows, labels) -> float:
+        predictions = self._model.predict(windows)
+        predictions = ['O' if s < .5 else 'I_BRAND' for s in predictions]
+        labels = ['O' if l < .5 else 'I_BRAND' for l in labels]
+        return f1_score(labels, predictions, average='macro')

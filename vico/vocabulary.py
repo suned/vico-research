@@ -28,6 +28,8 @@ class Vocabulary(Singleton):
 
     def __init__(self):
         self._embedding = None
+        with open('data/indices.pkl', 'rb') as f:
+            self._indices = pickle.load(f)
 
     def _read_embedding(self):
         config = self.args.get()
@@ -51,15 +53,11 @@ class Vocabulary(Singleton):
 
     @property
     def indices(self) -> Dict[str, int]:
-        return dict(
-            (t, i + 1) for (i, t) in enumerate(self.unique_tokens)
-        )
+        return self._indices
 
     @property
     def unique_tokens(self) -> Set[Token]:
-        return {token for doc in
-                self.cross_validation_split.documents
-                for token in doc.tokens}
+        return set(self.indices.keys())
 
     @property
     def languages(self):

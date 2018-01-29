@@ -93,6 +93,11 @@ def _get(_) -> Config:
         type=int,
         default=default.n_samples
     )
+    parser.add_argument(
+        '--window-size',
+        type=int,
+        default=default.window_size
+    )
     args = parser.parse_args()
     return Config(**vars(args))
 

@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 from vico import preprocess
 from vico.cross_validation_split import CrossValidationSplit
 from vico.html_document import HTMLDocument
-from vico.shared_layers import SharedLayersBuilder, SharedLayers
+from vico.shared_layers import SharedLayers
 from vico.vocabulary import Vocabulary
 from numpy import ndarray
 
@@ -93,9 +93,13 @@ class Task(ABC):
         self._model.fit(
             sequences,
             labels,
-            epochs=1,
-            batch_size=16
+            epochs=self.epoch + 1,
+            batch_size=16,
+            initial_epoch=self.epoch
         )
+        self.update_epoch()
+
+    def update_epoch(self):
         self.epoch += 1
         early_stopping_score = self.early_stopping_score()
         if self.is_best_score(early_stopping_score):
@@ -111,15 +115,15 @@ class Task(ABC):
         log.info('Fitting task %s on all data for 1 epoch', self.name)
         data = self._train_set + self._early_stopping_set
         sequences, labels = self.vocabulary.make_batch(data, self.encode_labels)
-        self._model.fit(sequences, labels, epochs=1, batch_size=16)
+        self._model.fit(sequences, labels, epochs=self.epoch + 1, batch_size=16, initial_epoch=self.epoch)
 
     def train_score(self) -> float:
         documents = self.filter_documents(
             self.cross_validation_split.train_documents
         )
-        return self.score(documents)
+        return self._score(documents)
 
-    def score(self, documents) -> float:
+    def _score(self, documents) -> float:
         sequences, labels = self.vocabulary.make_batch(
             documents,
             self.encode_labels
@@ -130,7 +134,7 @@ class Task(ABC):
         documents = self.filter_documents(
             self.cross_validation_split.test_documents
         )
-        return self.score(documents)
+        return self._score(documents)
 
     def early_stopping_score(self) -> float:
-        return self.score(self._early_stopping_set)
+        return self._score(self._early_stopping_set)
