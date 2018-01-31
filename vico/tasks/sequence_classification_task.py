@@ -12,6 +12,16 @@ from numpy import ndarray
 from typing import Any
 
 
+def stack(documents):
+    windows = [d.windows for d in
+               documents]
+    labels = [d.brand_bio_labels for d in
+              documents]
+    windows = numpy.vstack(windows)
+    labels = numpy.concatenate(labels)
+    return windows, labels
+
+
 class SequenceClassificationTask(Task):
     config = inject(ConsoleArguments)
 
@@ -55,39 +65,25 @@ class SequenceClassificationTask(Task):
         return 0.0
 
     def fit(self):
-        train_windows = [d.windows for d in self._train_set]
-        train_labels = [d.brand_bio_labels for d in self._train_set]
-        test_windows = [d.windows for d in self._early_stopping_set]
-        test_labels = [d.brand_bio_labels for d in self._early_stopping_set]
-        data = numpy.vstack(
-            train_windows + test_windows
-        )
-        labels = numpy.concatenate(
-            train_labels + test_labels
-        )
+        windows, labels = stack(self._train_set + self._early_stopping_set)
         self._model.fit(
-            data,
+            windows,
             labels,
             epochs=self.epoch + 1,
             batch_size=16,
             initial_epoch=self.epoch
         )
+        self.epoch += 1
 
     def train_score(self):
-        windows = [d.windows for d in self._train_set]
-        labels = [d.brand_bio_labels for d in self._train_set]
-        windows = numpy.vstack(windows)
-        labels = numpy.concatenate(labels)
+        windows, labels = stack(self._train_set)
         return self._score(
             windows,
             labels
         )
 
     def early_stopping_score(self):
-        windows = [d.windows for d in self._early_stopping_set]
-        labels = [d.brand_bio_labels for d in self._early_stopping_set]
-        windows = numpy.vstack(windows)
-        labels = numpy.concatenate(labels)
+        windows, labels = stack(self._early_stopping_set)
         return self._score(
             windows,
             labels
@@ -100,20 +96,14 @@ class SequenceClassificationTask(Task):
         )
 
     def test_score(self):
-        windows = [d.windows for d in self.cross_validation_split.test_documents]
-        labels = [d.brand_bio_labels for d in self.cross_validation_split.test_documents]
-        windows = numpy.vstack(windows)
-        labels = numpy.concatenate(labels)
+        windows, labels = stack(self.cross_validation_split.test_documents)
         return self._score(
             windows,
             labels
         )
 
     def fit_early_stopping(self):
-        windows = [d.windows for d in self._early_stopping_set]
-        labels = [d.brand_bio_labels for d in self._early_stopping_set]
-        windows = numpy.vstack(windows)
-        labels = numpy.concatenate(labels)
+        windows, labels = stack(self._train_set)
         self._model.fit(
             windows,
             labels,

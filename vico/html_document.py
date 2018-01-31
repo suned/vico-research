@@ -1,7 +1,12 @@
 import os
 from typing import List
+
+from serum import inject
+
 from f import Immutable
 from numpy import ndarray
+
+from vico.console_arguments import ConsoleArguments
 
 Token = str
 Tokens = List[Token]
@@ -17,15 +22,27 @@ class HTMLDocument(Immutable):
     gtin13: int = None
     ean: int = None
     asin: int = None
-    sku: int = None
+    sku: str = None
     price: float = None
     currency: str = None
     path: str = None
     vendor: str = None
     language: str = None
     tokens: Tokens = None
-    brand_bio_labels: ndarray = None
-    windows: ndarray = None
+    brand_bio_labels: List = None
+    windows_5: List = None
+    windows_11: List = None
+    windows_21: List = None
+
+    @property
+    def windows(self):
+        args = ConsoleArguments()
+        size = args.get().window_size
+        if size == 5:
+            return self.windows_5
+        elif size == 11:
+            return self.windows_11
+        return self.windows_21
 
     def set_html(self, html: str) -> 'HTMLDocument':
         d = self._asdict()

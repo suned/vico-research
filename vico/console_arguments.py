@@ -24,22 +24,9 @@ def _get(_) -> Config:
         action=LogLevelAction
     )
     parser.add_argument(
-        '--data-dir',
+        '--database-path',
         type=str,
-        help='path to data',
-        default=default.data_dir
-    )
-    parser.add_argument(
-        '--folds',
-        type=int,
-        help='number of cross validation folds',
-        default=default.folds
-    )
-    parser.add_argument(
-        '--embedding-dim',
-        type=int,
-        help='word embedding dimension',
-        default=default.embedding_dim
+        default=default.database_path
     )
     parser.add_argument(
         '--output-file',
@@ -52,18 +39,6 @@ def _get(_) -> Config:
         type=str,
         help='name of output dir',
         default=default.output_dir
-    )
-    parser.add_argument(
-        "--use-attributes",
-        type=bool,
-        help='include html attributes',
-        default=default.use_attributes
-    )
-    parser.add_argument(
-        "--epochs",
-        type=int,
-        help='number of epochs',
-        default=default.epochs
     )
     parser.add_argument(
         "--patience",
@@ -96,7 +71,8 @@ def _get(_) -> Config:
     parser.add_argument(
         '--window-size',
         type=int,
-        default=default.window_size
+        default=default.window_size,
+        choices=[5, 11, 21]
     )
     args = parser.parse_args()
     return Config(**vars(args))

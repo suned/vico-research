@@ -1,3 +1,0 @@
-embedding_dim,filters,brand_train_samples,brand_test_samples,brand_train_f1,brand_test_f1,test_language
-50,10,74,26,0.5561624649859944,0.03856749311294766,en
-50,10,26,74,0.5075757575757576,0.09090909090909091,de

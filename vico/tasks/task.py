@@ -116,6 +116,7 @@ class Task(ABC):
         data = self._train_set + self._early_stopping_set
         sequences, labels = self.vocabulary.make_batch(data, self.encode_labels)
         self._model.fit(sequences, labels, epochs=self.epoch + 1, batch_size=16, initial_epoch=self.epoch)
+        self.epoch += 1
 
     def train_score(self) -> float:
         documents = self.filter_documents(

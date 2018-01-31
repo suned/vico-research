@@ -27,11 +27,8 @@ class BrandTask(SequenceClassificationTask):
 
     def filter_documents(self, documents: [HTMLDocument]) -> [HTMLDocument]:
         return [d for d in documents
-                if d.brand_bio_labels is not None and isinstance(
-                    d.brand_bio_labels,
-                    ndarray
-                )
-                ]
+                if d.brand_bio_labels is not None
+                and isinstance(d.brand_bio_labels, list)]
 
     @property
     def name(self):
