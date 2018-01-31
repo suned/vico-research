@@ -19,7 +19,7 @@ class Evaluator(Component):
         log.info('Saving validation metrics')
         config = self.args.get()
         data = pandas.DataFrame(
-            [config.hyper_parameters()]
+            [config.hyper_parameters]
         )
         for task in tasks:
             data[task.name + '_train_samples'] = len(

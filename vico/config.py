@@ -34,6 +34,7 @@ class Config(Immutable):
                                self.output_dir,
                                self.output_file)
 
+    @property
     def hyper_parameters(self) -> Dict[str, Any]:
         return {
             'filters': self.filters,
