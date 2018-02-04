@@ -1,0 +1,2 @@
+filters,patience,window_size,brand_train_samples,brand_test_samples,brand_train_f1,brand_test_f1,test_language
+10,1,5,74,26,0.9918279430450664,0.6936647593014366,en

@@ -26,7 +26,7 @@ def _get(_) -> Config:
     parser.add_argument(
         '--database-path',
         type=str,
-        default=default.database_path
+            default=default.database_path
     )
     parser.add_argument(
         '--output-file',
