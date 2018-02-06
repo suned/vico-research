@@ -9,25 +9,26 @@ from .task import Task
 from abc import abstractmethod
 from numpy import ndarray
 
-from typing import Any
-
-
-def stack(documents):
-    windows = [d.windows for d in
-               documents]
-    labels = [d.brand_bio_labels for d in
-              documents]
-    windows = numpy.vstack(windows)
-    labels = numpy.concatenate(labels)
-    return windows, labels
-
 
 class SequenceClassificationTask(Task):
     config = inject(ConsoleArguments)
 
+    def stack(self, documents):
+        windows = [d.windows for d in
+                   documents]
+        labels = [self.label(d) for d in
+                  documents]
+        windows = numpy.vstack(windows)
+        labels = numpy.concatenate(labels)
+        return windows, labels
+
     @property
     @abstractmethod
     def name(self) -> str:
+        pass
+
+    @abstractmethod
+    def label(self, document):
         pass
 
     @property
@@ -61,11 +62,8 @@ class SequenceClassificationTask(Task):
     def encode_labels(self, documents: [HTMLDocument]) -> ndarray:
         return numpy.array([])
 
-    def label(self, document: HTMLDocument) -> Any:
-        return 0.0
-
     def fit(self):
-        windows, labels = stack(self._train_set + self._early_stopping_set)
+        windows, labels = self.stack(self._train_set + self._early_stopping_set)
         self._model.fit(
             windows,
             labels,
@@ -76,14 +74,14 @@ class SequenceClassificationTask(Task):
         self.epoch += 1
 
     def train_score(self):
-        windows, labels = stack(self._train_set)
+        windows, labels = self.stack(self._train_set)
         return self._score(
             windows,
             labels
         )
 
     def early_stopping_score(self):
-        windows, labels = stack(self._early_stopping_set)
+        windows, labels = self.stack(self._early_stopping_set)
         return self._score(
             windows,
             labels
@@ -96,14 +94,14 @@ class SequenceClassificationTask(Task):
         )
 
     def test_score(self):
-        windows, labels = stack(self.cross_validation_split.test_documents)
+        windows, labels = self.stack(self.cross_validation_split.test_documents)
         return self._score(
             windows,
             labels
         )
 
     def fit_early_stopping(self):
-        windows, labels = stack(self._train_set)
+        windows, labels = self.stack(self._train_set)
         self._model.fit(
             windows,
             labels,

@@ -45,11 +45,13 @@ class Task(ABC):
 
     def __init__(self, shared_layers: SharedLayers):
         self._shared_layers = shared_layers
-        self.unique_labels = set(
-            self.label(d) for d in self.filter_documents(
+        labels = [self.label(d) for d in self.filter_documents(
                 self.cross_validation_split.documents
-            )
-        )
+            )]
+        if type(labels[0]) != list:
+            self.unique_labels = set(l for l in labels)
+        else:
+            self.unique_labels = set(l for ls in labels for l in ls)
         train_documents = self.filter_documents(
             self.cross_validation_split.train_documents
         )

@@ -23,8 +23,7 @@ class ModelTrainer(Component):
                 epochs_without_improvement = task.epochs_without_improvement
                 patience_exceeded = epochs_without_improvement > config.patience
                 if task.target and patience_exceeded:
-                    total_epochs = sum([t.epoch - config.patience
-                                        for t in ts])
+                    total_epochs = (task.epoch - config.patience) * len(ts)
                     log.info(
                         'Patience exceeded on task %s. Found best epoch: %i',
                         task.name,

@@ -12,6 +12,9 @@ def format_brand(brand: str) -> str:
 
 class BrandTask(SequenceClassificationTask):
 
+    def label(self, document):
+        return document.brand_bio_labels
+
     target = immutable(True)
 
     @property

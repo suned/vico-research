@@ -24,7 +24,7 @@ class Experiment:
             log.info(
                 'starting fold %i of %i',
                 i + 1,
-                len(self.cross_validation_split) + 1
+                len(self.cross_validation_split) + 2
             )
             tasks = self.model_trainer.fit_tasks()
             self.evaluator.evaluate(tasks)
