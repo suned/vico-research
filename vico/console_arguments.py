@@ -74,6 +74,12 @@ def _get(_) -> Config:
         default=default.window_size,
         choices=[5, 11, 21]
     )
+    parser.add_argument(
+        '--skip',
+        type=str,
+        nargs='+',
+        default=default.skip
+    )
     args = parser.parse_args()
     return Config(**vars(args))
 

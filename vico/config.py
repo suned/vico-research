@@ -22,6 +22,7 @@ class Config(Immutable):
     n_samples: int = None
     window_size: int = 5
     database_path: str = '../data/all_docs.sqlite'
+    skip: str = []
 
     def __repr__(self) -> str:
         return """Config(log_level={},

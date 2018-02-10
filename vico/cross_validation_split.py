@@ -6,12 +6,14 @@ from pandas import Series
 from serum import Singleton, inject
 from sklearn.model_selection import LeaveOneGroupOut
 
+from vico.console_arguments import ConsoleArguments
 from vico.data_set_reader import DataSetReader
 from vico.html_document import HTMLDocument
 
 
 class CrossValidationSplit(Singleton):
     reader = inject(DataSetReader)
+    args = inject(ConsoleArguments)
 
     @property
     def train_documents(self) -> [HTMLDocument]:
@@ -45,6 +47,8 @@ class CrossValidationSplit(Singleton):
     def __next__(self):
         try:
             self._train_indices, self._test_indices = self._splits.pop()
+            if self.skip():
+                return next(self)
             return self._train_indices, self._test_indices
         except IndexError:
             raise StopIteration()
@@ -57,6 +61,10 @@ class CrossValidationSplit(Singleton):
         self._train_indices: ndarray = None
         self._test_indices: ndarray = None
         self._splits = self.split()
+
+    def skip(self):
+        test_doc = self.test_documents[0]
+        return test_doc.language in self.args.get().skip
 
 
 class LeaveOneLanguageOut(CrossValidationSplit):
