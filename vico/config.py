@@ -23,6 +23,7 @@ class Config(Immutable):
     window_size: int = 5
     database_path: str = '../data/all_docs.sqlite'
     skip: str = []
+    indices_path: str = 'data/indices.pkl'
 
     def __repr__(self) -> str:
         return """Config(log_level={},

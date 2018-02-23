@@ -28,7 +28,7 @@ class Vocabulary(Singleton):
 
     def __init__(self):
         self._embedding = None
-        with open('data/indices.pkl', 'rb') as f:
+        with open(self.args.get().indices_path, 'rb') as f:
             self._indices = pickle.load(f)
 
     def _read_embedding(self):

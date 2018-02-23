@@ -1,11 +1,10 @@
 import pickle
 
-from serum import Component, immutable, inject
+from serum import Component, inject
 from pony.orm import Database, Optional, PrimaryKey, db_session
 
 from vico.console_arguments import ConsoleArguments
 from vico.html_document import HTMLDocument
-import os
 
 
 _db = Database()
@@ -28,12 +27,14 @@ class DocumentDatabase(Component):
         language = Optional(str)
         tokens = Optional(bytes)
         brand_bio_labels = Optional(bytes)
+        ean_bio_labels = Optional(bytes)
         windows_5 = Optional(bytes)
         windows_11 = Optional(bytes)
         windows_21 = Optional(bytes)
 
     @db_session
     def save_documents(self, documents: [HTMLDocument]):
+        self.Document.select().delete()
         for doc in documents:
             db_doc = self.Document(
                 html=doc.html,
@@ -42,6 +43,7 @@ class DocumentDatabase(Component):
                 language=doc.language,
                 tokens=pickle.dumps(doc.tokens),
                 brand_bio_labels=pickle.dumps(doc.brand_bio_labels),
+                ean_bio_labels=pickle.dumps(doc.ean_bio_labels),
                 windows_5=pickle.dumps(doc.windows_5),
                 windows_11=pickle.dumps(doc.windows_11),
                 windows_21=pickle.dumps(doc.windows_21)
@@ -82,6 +84,7 @@ class DocumentDatabase(Component):
                 language=db_doc.language,
                 tokens=pickle.loads(db_doc.tokens),
                 brand_bio_labels=pickle.loads(db_doc.brand_bio_labels),
+                ean_bio_labels=pickle.loads(db_doc.ean_bio_labels) if db_doc.ean_bio_labels else None,
                 windows_5=pickle.loads(db_doc.windows_5),
                 windows_11=pickle.loads(db_doc.windows_11),
                 windows_21=pickle.loads(db_doc.windows_21)

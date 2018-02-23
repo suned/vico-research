@@ -36,6 +36,7 @@ def run(path):
     dataframe = read_as_utf_8(path)
     dataframe = dataframe.drop_duplicates()
     normalized = pivot(dataframe)
+    normalized = normalized.drop_duplicates()
     normalized.to_csv(output_path(path), index=False)
 
 

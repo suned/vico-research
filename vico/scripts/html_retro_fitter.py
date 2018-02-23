@@ -2,9 +2,12 @@ import pandas
 import pickle
 from gensim.models import Word2Vec
 import ast
+import argparse
 
-import ipdb
-ipdb.sset_trace()
+parser = argparse.ArgumentParser()
+parser.add_argument('path')
+
+
 labels = pandas.read_csv('data/labels.csv', converters={'tokens': lambda v: ast.literal_eval(v) if v else []})
 model = Word2Vec(size=300, min_count=0, sg=1)
 model.build_vocab(labels.tokens)

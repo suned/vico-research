@@ -30,6 +30,7 @@ class HTMLDocument(Immutable):
     language: str = None
     tokens: Tokens = None
     brand_bio_labels: List = None
+    ean_bio_labels: List = None
     windows_5: List = None
     windows_11: List = None
     windows_21: List = None

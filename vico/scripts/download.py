@@ -18,7 +18,7 @@ def format_file_name(url):
 def download_all(label_path, output_folder):
     label_frame = pandas.read_csv(label_path)
     paths = []
-    for url in label_frame.url:
+    for url in label_frame.product_page_url:
         path = download(url, output_folder)
         paths.append(path)
     label_frame['path'] = paths
