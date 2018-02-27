@@ -1,10 +1,11 @@
 import logging
 
-from serum import inject, Singleton, Component
+from serum import inject, Component
 
 from vico.console_arguments import ConsoleArguments
 from vico.shared_layers import SharedLayersBuilder
 from vico.tasks.brand_task import BrandTask
+from vico.tasks.ean_task import EANTask
 from vico.tasks.language_task import LanguageTask
 from vico.tasks.price_task import PriceTask
 from vico.tasks.task import Task
@@ -26,7 +27,8 @@ class TaskBuilder(Component):
                 'price': PriceTask(shared_layers),
                 'vendor': VendorTask(shared_layers),
                 'brand': BrandTask(shared_layers),
-                'language': LanguageTask(shared_layers)
+                'language': LanguageTask(shared_layers),
+                'ean': EANTask(shared_layers)
             }[target]
         config = self.args.get()
         log.info('recompiling models')

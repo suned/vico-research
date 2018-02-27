@@ -39,9 +39,10 @@ def download(url, output_folder):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('label_path')
-    parser.add_argument('--output-folder', default='data/pages')
+    parser = argparse.ArgumentParser('Download product pages')
+    parser.add_argument('label_path', help='Path to .csv with urls')
+    parser.add_argument('--output-folder', default='data/pages',
+                        help='output folder to download pages into')
     return parser.parse_args()
 
 

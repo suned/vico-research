@@ -36,7 +36,7 @@ class VendorTask(SequenceClassificationTask):
         return 'vendor'
 
     def compile_model(self) -> Model:
-        window_size = get().window_size
+        window_size = self.config.get().window_size
         input_layer = Input(
             shape=(window_size,)
         )

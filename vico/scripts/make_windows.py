@@ -1,3 +1,4 @@
+import argparse
 import pickle
 import ast
 import pandas
@@ -7,7 +8,15 @@ from serum import Environment
 from vico.database import DocumentDatabase
 from vico.html_document import HTMLDocument
 
-with open('data/indices.pkl', 'rb') as f:
+parser = argparse.ArgumentParser("""
+Create windows with brand and ean BIO labels
+""")
+parser.add_argument('indices_path', help='path to pickled indices dictionary')
+parser.add_argument('database_path', help='path to sqlite database')
+
+args = parser.parse_args()
+
+with open(args.indices_path, 'rb') as f:
     indices = pickle.load(f)
 
 

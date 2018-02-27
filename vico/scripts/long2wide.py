@@ -27,7 +27,7 @@ def pivot(dataframe):
 def output_path(path):
     root, name = os.path.split(path)
     suffix = '_clean'
-    name, *_ = name.split('.')
+    name, *_ = os.path.splitext(name)
     name = name + suffix + '.csv'
     return os.path.join(root, name)
 
@@ -41,8 +41,13 @@ def run(path):
 
 
 def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('path', type=str)
+    parser = argparse.ArgumentParser(description='''
+    Convert .csv file with product labels from long format (one row pr. attribute)
+    to wide format (one row pr. document) 
+    
+    adds a new file in the same directory with the suffix _clean appended to the filename
+    ''')
+    parser.add_argument('path', type=str, help='Path to .csv file to convert')
     return parser.parse_args()
 
 

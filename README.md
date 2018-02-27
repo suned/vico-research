@@ -1,6 +1,104 @@
 # Multi-Task Learning experiment for Vico Research
+## Creating the necessary data input files
+```
+> python -m vico.scripts.long2wide -h
+usage: long2wide.py [-h] path
 
+Convert .csv file with product labels from long format (one row pr. attribute)
+to wide format (one row pr. document). Adds a new file in the same directory
+with the suffix _clean appended to the filename
+
+positional arguments:
+  path        Path to .csv file to convert
+
+optional arguments:
+  -h, --help  show this help message and exit
+```
+```
+> python -m vico.scripts.download -h
+usage: Download product pages [-h] [--output-folder OUTPUT_FOLDER] label_path
+
+positional arguments:
+  label_path            Path to .csv with urls
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --output-folder OUTPUT_FOLDER
+                        output folder to download pages into
+```
+```
+> python -m vico.scripts.read_documents -h
+usage: Read HTML pages into an sqlite database [-h]
+                                               [--page-folder PAGE_FOLDER]
+                                               [--database-path DATABASE_PATH]
+                                               label_path
+
+positional arguments:
+  label_path            path to wide format .csv with document labels
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --page-folder PAGE_FOLDER
+  --database-path DATABASE_PATH
+```
+```
+> python -m vico.scripts.preprocess -h
+usage: Perform preprocessing of documents and create windows for structured prediction
+       [-h] [--database-path DATABASE_PATH]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --database-path DATABASE_PATH
+                        path to sqlite database
+```
+```
+> python -m vico.scripts.transform_embedding -h
+usage: Combine and transform pretrained word vectors into a pickled dictionary
+       [-h]
+       database_path embedding_path pretrained_vector_folder
+       transformation_matrix_folder
+
+positional arguments:
+  database_path         path to sqlite database
+  embedding_path        output path to pickled embedding dictionary
+  pretrained_vector_folder
+                        path to folder with pretrained vectors
+  transformation_matrix_folder
+                        path to folder with transformation matrices
+
+optional arguments:
+  -h, --help            show this help message and exit
+```
+```
+> ppython -m vico.scripts.html_retro_fitter -h
+usage: Retrofit word vectors for HTML tags [-h]
+                                           database_path embedding_path
+                                           indices.path
+
+positional arguments:
+  database_path   path to sqlite database
+  embedding_path  path to pickled embedding dictionary
+  indices.path    output path for pickled indices dictionary
+
+optional arguments:
+  -h, --help      show this help message and exit
+```
+```
+> python -m vico.scripts.make_windows -h
 usage:
+Create windows with brand and ean BIO labels
+ [-h]
+                                                      indices_path
+                                                      database_path
+
+positional arguments:
+  indices_path   path to pickled indices dictionary
+  database_path  path to sqlite database
+
+optional arguments:
+  -h, --help     show this help message and exit
+```
+## Training script usage
 ```
 > python -m vico.experiment -h
 usage: experiment.py [-h] [--log-level {DEBUG,INFO,WARNING,ERROR,CRITICAL}]

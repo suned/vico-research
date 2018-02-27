@@ -33,8 +33,9 @@ class DocumentDatabase(Component):
         windows_21 = Optional(bytes)
 
     @db_session
-    def save_documents(self, documents: [HTMLDocument]):
-        self.Document.select().delete()
+    def save_documents(self, documents: [HTMLDocument], overwrite=True):
+        if overwrite:
+            self.Document.select().delete()
         for doc in documents:
             db_doc = self.Document(
                 html=doc.html,

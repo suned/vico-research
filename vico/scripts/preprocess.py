@@ -1,20 +1,33 @@
-from vico import Config
-from .. import read, preprocess, configure_root_logger
-from ..validate import limit
-import logging
-import pandas
+import argparse
 
-config = Config(log_level=logging.INFO)
-configure_root_logger(config)
-tokenizations = (read.all_docs() >> preprocess.pipeline)(config)
-data = pandas.read_csv('data/labels.csv')
-data['tokens'] = None
-data = data.set_index('path')
-for tokenization in tokenizations:
-    try:
-        data.at[tokenization.document.path, 'tokens'] = tokenization.tokens
-    except:
-        import ipdb
-        ipdb.sset_trace()
-data = data.reset_index()
-data.to_csv('data/labels.csv', index=False)
+from serum import Environment
+
+from vico import Config
+from vico.argument_provider import ArgumentProvider
+from vico.database import DocumentDatabase
+from vico.preprocess import remove_useless_tags, html_tokenize, lowercase
+
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(
+        'Perform preprocessing of documents '
+        'and create windows for structured prediction')
+    parser.add_argument('--database-path', help='path to sqlite database', default='../data/all_documents.sqlite')
+    return parser.parse_args()
+
+
+def run(database_path):
+    config = Config(database_path=database_path)
+    ArgumentProvider.config = config
+    with Environment(ArgumentProvider):
+        db = DocumentDatabase()
+        documents = db.load_documents()
+        cleaned_documents = remove_useless_tags(documents)
+        tokenized_documents = html_tokenize(cleaned_documents)
+        lowercase_documents = lowercase(tokenized_documents)
+        db.save_documents(lowercase_documents)
+
+
+if __name__ == '__main__':
+    run(**vars(parse_arguments()))
+

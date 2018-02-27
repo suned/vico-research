@@ -51,14 +51,15 @@ def remove_tags(doc: HTMLDocument) -> HTMLDocument:
     return doc.set_html(html)
 
 
-def remove_useless_tags(docs: Docs) -> Reader[Config, Docs]:
+def remove_useless_tags(docs: [HTMLDocument]) -> [HTMLDocument]:
     log.info('Removing tags: %s', ', '.join(_useless_tags()))
-    pool = Pool(os.cpu_count())
-    pdocs = pool.map(remove_tags, docs)
-    return Reader.pure(Docs(pdoc for pdoc in pdocs))
+    with Pool(os.cpu_count()) as pool:
+        return pool.map(remove_tags, docs)
 
 
-def html_tokenize_document(use_attributes, doc: HTMLDocument) -> HTMLDocument:
+def html_tokenize_document(doc: HTMLDocument) -> HTMLDocument:
+    use_attributes = False
+
     def format_attributes(tag: Tag) -> str:
         attributes = []
         for key, value in tag.attrs.items():
@@ -95,14 +96,10 @@ def html_tokenize_document(use_attributes, doc: HTMLDocument) -> HTMLDocument:
     return doc.set_tokens(List(t for t in tokens))
 
 
-def html_tokenize(docs: Docs) -> Reader[Config, Tokenizations]:
-    def _(config: Config) -> Reader[Config, Tokenizations]:
-        log.info('HTML tokenizing documents')
-        with Pool(os.cpu_count()) as pool:
-            tokenize = partial(html_tokenize_document, config.use_attributes)
-            pdocs = pool.map(tokenize, docs.values)
-        return Reader.pure(List(pdoc for pdoc in pdocs))
-    return Reader.ask(Config) >> _
+def html_tokenize(docs: [HTMLDocument]) -> [HTMLDocument]:
+    log.info('HTML tokenizing documents')
+    with Pool(os.cpu_count()) as pool:
+        return pool.map(html_tokenize_document, docs)
 
 
 def simple_tokenize(docs: Docs) -> Reader[Config, Tokenizations]:
@@ -112,14 +109,9 @@ def simple_tokenize(docs: Docs) -> Reader[Config, Tokenizations]:
     return Reader.pure(docs | tokenize)
 
 
-def to_lower(t: HTMLDocument) -> HTMLDocument:
-    lower_tokens = t.tokens | (lambda token: token.lower())
-    return HTMLDocument(t.document, lower_tokens)
-
-
-def lowercase(docs: Tokenizations) -> Reader[Config, Tokenizations]:
+def lowercase(docs: [HTMLDocument]) -> [HTMLDocument]:
     log.info('Lowercase documents')
-    return Reader.pure(docs | to_lower)
+    return [doc.set_tokens([t.lower() for t in doc.tokens]) for doc in docs]
 
 
 def maxlen(documents: [HTMLDocument]) -> int:

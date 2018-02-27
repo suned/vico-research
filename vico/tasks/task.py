@@ -48,7 +48,7 @@ class Task(ABC):
         labels = [self.label(d) for d in self.filter_documents(
                 self.cross_validation_split.documents
             )]
-        if type(labels[0]) != list:
+        if labels and type(labels[0]) != list:
             self.unique_labels = set(l for l in labels)
         else:
             self.unique_labels = set(l for ls in labels for l in ls)
