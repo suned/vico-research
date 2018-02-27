@@ -43,8 +43,7 @@ optional arguments:
 ```
 ```
 > python -m vico.scripts.preprocess -h
-usage: Perform preprocessing of documents and create windows for structured prediction
-       [-h] [--database-path DATABASE_PATH]
+usage: Perform preprocessing of documents [-h] [--database-path DATABASE_PATH]
 
 optional arguments:
   -h, --help            show this help message and exit

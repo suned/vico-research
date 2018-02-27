@@ -10,8 +10,7 @@ from vico.preprocess import remove_useless_tags, html_tokenize, lowercase
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
-        'Perform preprocessing of documents '
-        'and create windows for structured prediction')
+        'Perform preprocessing of documents')
     parser.add_argument('--database-path', help='path to sqlite database', default='../data/all_documents.sqlite')
     return parser.parse_args()
 
