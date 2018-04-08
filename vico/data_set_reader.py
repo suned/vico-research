@@ -17,5 +17,3 @@ class DataSetReader(Component):
     def read_documents(self) -> [HTMLDocument]:
         documents = self.database.load_documents()
         return [d for d in documents if len(d.windows) > 0]
-
-

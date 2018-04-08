@@ -21,7 +21,7 @@ class DownloadSpider(scrapy.Spider):
 
     def __init__(self,
                  domain,
-                 labels_csv='data/CosmeticsTestData.csv',
+                 labels_file='data/CosmeticsTestData.csv',
                  output_folder='data/unlabeled',
                  language='de',
                  **kwargs):
@@ -32,7 +32,7 @@ class DownloadSpider(scrapy.Spider):
         self.language = language
         self.domain = domain
         self.base = 'http://www.{}.{}'.format(domain, language)
-        self.start_urls = self._parse_start_urls(labels_csv)
+        self.start_urls = self._parse_start_urls(labels_file)
 
     def _parse_start_urls(self, labels_csv):
         labels = pandas.read_csv(labels_csv, sep=';')

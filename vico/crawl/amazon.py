@@ -13,3 +13,5 @@ class AmazonSpider(DownloadSpider):
                 '.a-link-normal::attr(href)'
             ).extract_first()
             yield Link(url=url, tag=customers_also_bought)
+
+

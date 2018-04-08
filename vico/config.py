@@ -24,6 +24,8 @@ class Config(Immutable):
     database_path: str = '../data/all_docs.sqlite'
     skip: str = []
     indices_path: str = 'data/indices.pkl'
+    model_folder: str = 'models'
+    skip_validation: bool = False
 
     def __repr__(self) -> str:
         return """Config(log_level={},

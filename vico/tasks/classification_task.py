@@ -16,10 +16,10 @@ log = logging.getLogger('vico.tasks.classification_task')
 
 
 class ClassificationTask(Task):
-    def __init__(self, shared_layers: SharedLayers):
+    def __init__(self, shared_layers: SharedLayers, all_data=False):
         self.label_encoder = None
         self.one_hot_encoder = None
-        super().__init__(shared_layers)
+        super().__init__(shared_layers, all_data)
 
     @property
     @abstractmethod

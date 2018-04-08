@@ -13,7 +13,7 @@ class ModelTrainer(Component):
     task_builder = inject(TaskBuilder)
     args = inject(ConsoleArguments)
 
-    def fit_tasks(self) -> [Task]:
+    def fit_tasks(self, all_data=False) -> [Task]:
         config = self.args.get()
 
         def find_best_epoch(ts) -> int:
@@ -38,9 +38,8 @@ class ModelTrainer(Component):
                 log.info('Epoch: %i of %i', epoch + 1, epochs)
                 task = random.choice(ts)
                 task.fit()
-
-        tasks = self.task_builder.build()
+        tasks = self.task_builder.build(all_data)
         best_epoch = find_best_epoch(tasks)
-        tasks = self.task_builder.build()
+        tasks = self.task_builder.build(all_data)
         fit_on_all_data(best_epoch, tasks)
         return tasks

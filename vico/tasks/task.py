@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Tuple, Any, List
 
 from keras import Model
+from keras.models import load_model
 from pandas import Series
 from serum import inject, immutable
 from sklearn.model_selection import train_test_split
@@ -12,7 +13,9 @@ from vico.cross_validation_split import CrossValidationSplit
 from vico.html_document import HTMLDocument
 from vico.shared_layers import SharedLayers
 from vico.vocabulary import Vocabulary
+from vico.console_arguments import ConsoleArguments
 from numpy import ndarray
+import os
 
 
 def split(documents) -> Tuple[List[HTMLDocument], List[HTMLDocument]]:
@@ -25,9 +28,17 @@ log = logging.getLogger('vico.task')
 
 
 class Task(ABC):
+    args = inject(ConsoleArguments)
     cross_validation_split = inject(CrossValidationSplit)
     target = immutable(False)
     vocabulary = inject(Vocabulary)
+
+    def save(self):
+        folder = self.args.get().model_folder
+        os.makedirs(folder, exist_ok=True)
+        path = os.path.join(folder, self.name + '.hd5')
+        log.info('Saving model: %s to %s', self.name, path)
+        self._model.save(path)
 
     @property
     @abstractmethod
@@ -43,7 +54,7 @@ class Task(ABC):
     def input_length(self) -> int:
         return preprocess.maxlen(self.cross_validation_split.documents)
 
-    def __init__(self, shared_layers: SharedLayers):
+    def __init__(self, shared_layers: SharedLayers, all_data=False):
         self._shared_layers = shared_layers
         labels = [self.label(d) for d in self.filter_documents(
                 self.cross_validation_split.documents
@@ -52,8 +63,12 @@ class Task(ABC):
             self.unique_labels = set(l for l in labels)
         else:
             self.unique_labels = set(l for ls in labels for l in ls)
+        if all_data:
+            documents = self.cross_validation_split.documents
+        else:
+            documents = self.cross_validation_split.train_documents
         train_documents = self.filter_documents(
-            self.cross_validation_split.train_documents
+            documents
         )
         self._train_set, self._early_stopping_set = split(train_documents)
         self._model = self.compile_model()

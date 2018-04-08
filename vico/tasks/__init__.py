@@ -19,16 +19,16 @@ class TaskBuilder(Component):
     args = inject(ConsoleArguments)
     shared_layers_builder = inject(SharedLayersBuilder)
 
-    def build(self) -> [Task]:
+    def build(self, all_data=False) -> [Task]:
         shared_layers = self.shared_layers_builder.build()
 
         def task_factory(target: str) -> Task:
             return {
-                'price': PriceTask(shared_layers),
-                'vendor': VendorTask(shared_layers),
-                'brand': BrandTask(shared_layers),
-                'language': LanguageTask(shared_layers),
-                'ean': EANTask(shared_layers)
+                'price': PriceTask(shared_layers, all_data=all_data),
+                'vendor': VendorTask(shared_layers, all_data=all_data),
+                'brand': BrandTask(shared_layers, all_data=all_data),
+                'language': LanguageTask(shared_layers, all_data=all_data),
+                'ean': EANTask(shared_layers, all_data=all_data)
             }[target]
         config = self.args.get()
         log.info('recompiling models')

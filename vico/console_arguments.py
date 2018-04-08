@@ -100,6 +100,16 @@ def _get(_) -> Config:
         nargs='+',
         default=default.skip
     )
+    parser.add_argument(
+        '--model-folder',
+        type=str,
+        help='Folder to save final model after training',
+        default=default.model_folder
+    )
+    parser.add_argument(
+        '--skip-validation',
+        action='store_true'
+    )
     args = parser.parse_args()
     return Config(**vars(args))
 

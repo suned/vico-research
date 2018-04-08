@@ -18,3 +18,5 @@ scrapy
 langdetect
 serum
 pony
+aiohttp
+h5py

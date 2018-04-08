@@ -1,3 +1,0 @@
-filters,patience,window_size,vendor_train_samples,vendor_test_samples,vendor_train_sigmoid,vendor_test_sigmoid,brand_train_samples,brand_test_samples,brand_train_f1,brand_test_f1,test_language
-10,5,5,8084,31,11.13534015426014,15.252431082805513,8084,31,0.9847317708259444,0.9820840475067398,pl
-10,5,5,8106,9,1.1081257032634833,1.0662296783101688,8106,9,0.43285747729070784,0.43409828063815786,nl

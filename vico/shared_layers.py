@@ -1,11 +1,11 @@
 import logging
-from typing import Tuple, NamedTuple, List
+from typing import Tuple
 
 from f import Immutable
 from keras.models import Layer
 from keras.initializers import RandomUniform, glorot_uniform
 from keras.layers import Embedding, Conv1D, GlobalMaxPool1D, concatenate
-from serum import inject, Singleton, Component
+from serum import inject, Component
 from vico.console_arguments import ConsoleArguments
 from vico.vocabulary import Vocabulary
 

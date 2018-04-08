@@ -10,8 +10,8 @@ from vico.tasks.sequence_classification_task import SequenceClassificationTask
 
 
 class VendorTask(SequenceClassificationTask):
-    def __init__(self, shared_layers: SharedLayers):
-        super().__init__(shared_layers)
+    def __init__(self, shared_layers: SharedLayers, all_data=False):
+        super().__init__(shared_layers, all_data)
         self.label_encoder = LabelEncoder()
         self.label_encoder.fit(list(self.unique_labels))
 

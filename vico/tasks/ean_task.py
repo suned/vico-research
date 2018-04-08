@@ -31,8 +31,8 @@ class EANTask(SequenceClassificationTask):
     def scoring_function(self):
         return 'f1'
 
-    def __init__(self, shared_layers: SharedLayers):
-        super().__init__(shared_layers)
+    def __init__(self, shared_layers: SharedLayers, all_data=False):
+        super().__init__(shared_layers, all_data)
         self.best_score = float('-inf')
 
     def is_best_score(self, f1):
