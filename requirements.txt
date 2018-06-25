@@ -16,7 +16,7 @@ pytest
 gensim
 scrapy
 langdetect
-serum
+serum==1.1.0
 pony
 aiohttp
 h5py

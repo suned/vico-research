@@ -1,4 +1,20 @@
 # Multi-Task Learning experiment for Vico Research
+## Install dependencies
+```
+> pip install -r requirements
+```
+```angular2html
+python -c 'import nltk; nltk.download("punkt")'
+```
+## Loading EAN model
+```python
+from vico.pipeline import EANPipeline
+
+pipeline = EANPipeline.load('path/to/EAN.hd5', 'path/to/indices.pkl')
+html = '<html> Some input </html>'
+pipeline(html, language='german')
+
+```
 ## Creating the necessary data input files
 ```
 > python -m vico.scripts.long2wide -h
